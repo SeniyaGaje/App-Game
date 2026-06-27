@@ -1,0 +1,229 @@
+//
+//  LightItUpView.swift
+//  App Game
+//
+//  Week 2 mode: cards light up; tap them before they go dark.
+//
+
+import SwiftUI
+
+struct LightItUpView: View {
+    @AppStorage("lightItUpHighScore") private var highScore: Int = 0
+    @AppStorage("roundLength") private var roundLength: Int = 60
+
+    @State private var cards: [GameCard] = []
+    @State private var score: Int = 0
+    @State private var timeLeft: Int = 60
+    @State private var isPlaying: Bool = false
+    @State private var level: LightLevel = .level1
+
+    @State private var roundTimer: Timer?
+    @State private var lightTimer: Timer?
+
+    @State private var showLevelFlash: Bool = false
+
+    var body: some View {
+        ZStack {
+            LinearGradient(colors: [Color.black, Color.gray.opacity(0.4)], startPoint: .topLeading, endPoint: .bottomTrailing)
+                .ignoresSafeArea()
+
+            VStack(spacing: 16) {
+                Text("Light It Up")
+                    .font(.largeTitle).bold()
+                    .foregroundStyle(.white)
+
+                HStack(spacing: 12) {
+                    StatBlock(title: "Score", value: "\(score)")
+                    StatBlock(title: "Best", value: "\(highScore)")
+                    StatBlock(title: "Level", value: "\(level.rawValue)")
+                    StatBlock(title: "Time", value: "\(timeLeft)s", isWarning: isPlaying && timeLeft <= 5)
+                }
+
+                LazyVGrid(columns: level.gridColumns, spacing: 12) {
+                    ForEach(Array(cards.enumerated()), id: \.element) { index, card in
+                        CardView(isLit: card.isLit, color: level.glowColor)
+                            .onTapGesture { handleTap(on: index) }
+                            .animation(.easeInOut(duration: 0.15), value: card.isLit)
+                    }
+                }
+                .padding(.vertical, 8)
+
+                HStack(spacing: 16) {
+                    Button(isPlaying ? "Restart" : "Start") { resetGame(start: true) }
+                        .buttonStyle(.borderedProminent)
+
+                    if isPlaying {
+                        Button("Stop") { resetGame(start: false) }
+                            .buttonStyle(.bordered)
+                    }
+                }
+
+                Spacer(minLength: 0)
+            }
+            .padding()
+
+            if showLevelFlash {
+                Color.white.opacity(0.25)
+                    .ignoresSafeArea()
+                    .transition(.opacity)
+            }
+        }
+        .onAppear { timeLeft = roundLength; configureLevel(for: roundLength - timeLeft) }
+        .onDisappear { stopAllTimers() }
+    }
+
+    // MARK: - Game Flow
+
+    private func resetGame(start: Bool) {
+        score = 0
+        timeLeft = roundLength
+        level = .level1
+        rebuildCards()
+        clearLit()
+        if start {
+            isPlaying = true
+            startRoundTimer()
+            startLightTimer()
+        } else {
+            isPlaying = false
+            stopAllTimers()
+        }
+    }
+
+    private func startRoundTimer() {
+        roundTimer?.invalidate()
+        roundTimer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { _ in
+            if timeLeft > 0 { timeLeft -= 1 }
+            updateLevelForElapsed()
+            if timeLeft == 0 {
+                isPlaying = false
+                stopAllTimers()
+                if score > highScore { highScore = score }
+            }
+        }
+    }
+
+    private func startLightTimer() {
+        lightTimer?.invalidate()
+        lightTimer = Timer.scheduledTimer(withTimeInterval: max(0.2, level.litWindow), repeats: true) { _ in
+            tickLights()
+        }
+    }
+
+    private func stopAllTimers() {
+        roundTimer?.invalidate(); roundTimer = nil
+        lightTimer?.invalidate(); lightTimer = nil
+    }
+
+    // MARK: - Level & Cards
+
+    private func updateLevelForElapsed() {
+        let elapsed = roundLength - timeLeft
+        configureLevel(for: elapsed)
+    }
+
+    private func configureLevel(for elapsed: Int) {
+        let newLevel: LightLevel
+        switch elapsed {
+        case 0..<15: newLevel = .level1
+        case 15..<30: newLevel = .level2
+        case 30..<45: newLevel = .level3
+        default: newLevel = .level4
+        }
+        if newLevel != level {
+            level = newLevel
+            rebuildCards()
+            flashLevel()
+            // Restart light timer with new cadence
+            if isPlaying { startLightTimer() }
+        }
+    }
+
+    private func rebuildCards() {
+        cards = Array(repeating: GameCard(), count: level.cardCount)
+    }
+
+    private func flashLevel() {
+        withAnimation(.easeInOut(duration: 0.25)) { showLevelFlash = true }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) {
+            withAnimation(.easeInOut(duration: 0.25)) { showLevelFlash = false }
+        }
+    }
+
+    // MARK: - Lighting Logic
+
+    private func tickLights() {
+        // Apply missed penalty for any lit cards that weren't tapped
+        let missedCount = cards.filter { $0.isLit }.count
+        if missedCount > 0 {
+            score = max(0, score - missedCount) // -1 per missed
+        }
+
+        // Clear previous lit state
+        clearLit()
+
+        // Choose random indices to light
+        let indices = randomUniqueIndices(count: level.litCount, upperBound: cards.count)
+        for idx in indices {
+            cards[idx].isLit = true
+        }
+
+        // Schedule auto-dim after the window (enforces miss penalty next tick if not tapped)
+        DispatchQueue.main.asyncAfter(deadline: .now() + level.litWindow) {
+            for i in indices { if i < cards.count { cards[i].isLit = false } }
+        }
+    }
+
+    private func clearLit() {
+        for i in cards.indices { cards[i].isLit = false }
+    }
+
+    private func randomUniqueIndices(count: Int, upperBound: Int) -> [Int] {
+        guard count > 0, upperBound > 0 else { return [] }
+        var indices = Array(0..<upperBound)
+        indices.shuffle()
+        return Array(indices.prefix(count))
+    }
+
+    // MARK: - Input
+
+    private func handleTap(on index: Int) {
+        guard index < cards.count else { return }
+        if cards[index].isLit {
+            score += 1
+            cards[index].isLit = false
+        } else {
+            score = max(0, score - 1)
+        }
+    }
+}
+
+private struct CardView: View {
+    let isLit: Bool
+    let color: Color
+
+    var body: some View {
+        ZStack {
+            RoundedRectangle(cornerRadius: 12)
+                .fill(isLit ? color.opacity(0.9) : Color.white.opacity(0.08))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 12)
+                        .stroke(isLit ? color : Color.white.opacity(0.2), lineWidth: isLit ? 3 : 1)
+                )
+                .shadow(color: isLit ? color.opacity(0.7) : .clear, radius: isLit ? 12 : 0)
+                .scaleEffect(isLit ? 1.05 : 1.0)
+                .animation(.spring(response: 0.25, dampingFraction: 0.8), value: isLit)
+
+            if isLit {
+                Image(systemName: "bolt.fill")
+                    .font(.title)
+                    .foregroundStyle(.white)
+            }
+        }
+        .frame(height: 80)
+    }
+}
+
+#Preview {
+    LightItUpView()
+}
