@@ -51,12 +51,21 @@ struct HomeView: View {
                         } label: {
                             LargeNavButton(title: "Tap Frenzy", subtitle: "Best: \(tapFrenzyHighScore)", color: .green, icon: "bolt.fill")
                         }
+                        .buttonStyle(.plain)
 
                         NavigationLink {
                             LightItUpView()
                         } label: {
                             LargeNavButton(title: "Light It Up", subtitle: "Best: \(lightItUpHighScore)", color: .blue, icon: "lightbulb.max.fill")
                         }
+                        .buttonStyle(.plain)
+
+                        NavigationLink {
+                            QuizRushView()
+                        } label: {
+                            LargeNavButton(title: "Quiz Rush", subtitle: "Live Trivia", color: .orange, icon: "questionmark.circle.fill")
+                        }
+                        .buttonStyle(.plain)
                     }
                     .padding(.horizontal)
 
@@ -134,7 +143,6 @@ private struct LargeNavButton: View {
         .frame(height: 120)
         .contentShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
         .hoverEffect(.lift)
-        .animation(.spring(response: 0.5, dampingFraction: 0.8), value: UUID())
     }
 }
 

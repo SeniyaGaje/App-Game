@@ -1,40 +1,101 @@
 import Foundation
 
-struct TriviaResponse: Codable {
-    let results: [TriviaQuestion]
+/// Top-level response from Open Trivia DB.
+struct OpenTriviaResponse: Codable {
+    let results: [OpenTriviaQuestion]
 }
 
-struct TriviaQuestion: Codable, Identifiable {
+/// A single multiple-choice trivia question from Open Trivia DB.
+struct OpenTriviaQuestion: Codable, Identifiable, Equatable {
     let id = UUID()
     let question: String
     let correctAnswer: String
     let incorrectAnswers: [String]
-    
-    enum CodingKeys: String, CodingKey {
+
+    private enum CodingKeys: String, CodingKey {
         case question
         case correctAnswer = "correct_answer"
         case incorrectAnswers = "incorrect_answers"
     }
-    
-    var decodedQuestion: String {
-        question.htmlDecoded
+
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        let rawQ = try c.decode(String.self, forKey: .question)
+        let rawCorrect = try c.decode(String.self, forKey: .correctAnswer)
+        let rawIncorrect = try c.decode([String].self, forKey: .incorrectAnswers)
+        self.question = rawQ.decodingHTMLEntities()
+        self.correctAnswer = rawCorrect.decodingHTMLEntities()
+        self.incorrectAnswers = rawIncorrect.map { $0.decodingHTMLEntities() }
     }
-    
-    func decodedAnswers() -> [String] {
-        let allAnswers = incorrectAnswers + [correctAnswer]
-        return allAnswers.map { $0.htmlDecoded }.shuffled()
+
+    init(question: String, correctAnswer: String, incorrectAnswers: [String]) {
+        self.question = question
+        self.correctAnswer = correctAnswer
+        self.incorrectAnswers = incorrectAnswers
     }
+
+    /// A shuffled array of all answers (correct + incorrect).
+    var answersShuffled: [String] {
+        var all = incorrectAnswers + [correctAnswer]
+        all.shuffle()
+        return all
+    }
+
+    /// Convenience function to get shuffled answers.
+    func allAnswersShuffled() -> [String] { answersShuffled }
+
+    /// Compatibility helper for older view code expecting decodedQuestion()
+    func decodedQuestion() -> String { question }
+
+    /// Compatibility helper for older view code expecting decodedAnswers()
+    func decodedAnswers() -> [String] { answersShuffled }
 }
 
+// Simple HTML entity decoding without UIKit/AppKit.
 extension String {
-    var htmlDecoded: String {
-        guard let data = self.data(using: .utf8) else { return self }
-        let options: [NSAttributedString.DocumentReadingOptionKey: Any] = [
-            .documentType: NSAttributedString.DocumentType.html
+    /// Decodes a small set of common HTML entities found in OpenTDB strings.
+    func decodingHTMLEntities() -> String {
+        var result = self
+
+        let replacements: [String: String] = [
+            "&quot;": "\"",
+            "&#039;": "'",
+            "&apos;": "'",
+            "&amp;": "&",
+            "&lt;": "<",
+            "&gt;": ">",
+            "&nbsp;": " ",
+            "&ldquo;": "\"",
+            "&rdquo;": "\"",
+            "&lsquo;": "'",
+            "&rsquo;": "'",
+            "&eacute;": "é"
         ]
-        if let attributedString = try? NSAttributedString(data: data, options: options, documentAttributes: nil) {
-            return attributedString.string
+
+        for (entity, character) in replacements {
+            result = result.replacingOccurrences(of: entity, with: character)
         }
-        return self
+
+        let numericEntityPattern = "&#(\\d+);"
+        if let regex = try? NSRegularExpression(pattern: numericEntityPattern) {
+            let nsString = result as NSString
+            let matches = regex.matches(in: result, range: NSRange(location: 0, length: nsString.length))
+
+            for match in matches.reversed() {
+                guard match.numberOfRanges == 2 else { continue }
+                let codeRange = match.range(at: 1)
+                let fullRange = match.range(at: 0)
+                guard let swiftCodeRange = Range(codeRange, in: result),
+                      let code = Int(result[swiftCodeRange]),
+                      let scalar = UnicodeScalar(code),
+                      let swiftFullRange = Range(fullRange, in: result) else {
+                    continue
+                }
+
+                result.replaceSubrange(swiftFullRange, with: String(Character(scalar)))
+            }
+        }
+
+        return result
     }
 }

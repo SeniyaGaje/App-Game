@@ -1,5 +1,6 @@
 import Foundation
 import SwiftUI
+import Combine
 
 @MainActor
 final class QuizRushViewModel: ObservableObject {
@@ -16,9 +17,19 @@ final class QuizRushViewModel: ObservableObject {
     @Published private(set) var currentIndex: Int = 0
     @Published private(set) var score: Int = 0
     @Published private(set) var streak: Int = 0
-    @Published var lastAnswerWasCorrect: Bool? = nil
+    @Published private(set) var correctCount: Int = 0
+    @Published private(set) var selectedAnswer: String? = nil
+    @Published private(set) var revealedCorrectAnswer: String? = nil
+    @Published private(set) var answerFeedback: AnswerFeedback = .none
+    @Published private(set) var isAnswerLocked: Bool = false
     
     let service: QuizRushService
+
+    enum AnswerFeedback {
+        case none
+        case correct
+        case incorrect
+    }
     
     init(service: QuizRushService = .shared) {
         self.service = service
@@ -30,7 +41,11 @@ final class QuizRushViewModel: ObservableObject {
         score = 0
         streak = 0
         currentIndex = 0
-        lastAnswerWasCorrect = nil
+        correctCount = 0
+        selectedAnswer = nil
+        revealedCorrectAnswer = nil
+        answerFeedback = .none
+        isAnswerLocked = false
         
         do {
             questions = try await service.fetchQuestions(amount: amount)
@@ -48,20 +63,39 @@ final class QuizRushViewModel: ObservableObject {
     
     /// Process an answer string, update score, streak and state accordingly.
     func answer(_ answer: String) {
+        guard !isAnswerLocked else { return }
         guard let current = currentQuestion() else { return }
+
+        isAnswerLocked = true
+        selectedAnswer = answer
+        revealedCorrectAnswer = current.correctAnswer
         
         if answer == current.correctAnswer {
             streak += 1
             score += 100 + (streak * 10)
-            lastAnswerWasCorrect = true
+            correctCount += 1
+            answerFeedback = .correct
         } else {
             score = max(0, score - 25)
             streak = 0
-            lastAnswerWasCorrect = false
+            answerFeedback = .incorrect
         }
-        
+
+        Task { [weak self] in
+            try? await Task.sleep(nanoseconds: 650_000_000)
+            guard let self else { return }
+            self.advanceToNextQuestion()
+        }
+    }
+
+    private func advanceToNextQuestion() {
+        selectedAnswer = nil
+        revealedCorrectAnswer = nil
+        answerFeedback = .none
+        isAnswerLocked = false
+
         currentIndex += 1
-        
+
         if currentIndex >= questions.count {
             state = .finished
         }
@@ -75,5 +109,9 @@ final class QuizRushViewModel: ObservableObject {
     /// Progress text in the format "currentIndex of totalQuestions"
     var progressText: String {
         "\(min(currentIndex + 1, questions.count)) of \(questions.count)"
+    }
+
+    var summaryText: String {
+        "\(correctCount) / \(questions.count) correct"
     }
 }
