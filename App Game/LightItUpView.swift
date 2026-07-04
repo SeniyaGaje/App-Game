@@ -21,46 +21,88 @@ struct LightItUpView: View {
     @State private var lightTimer: Timer?
 
     @State private var showLevelFlash: Bool = false
+    @State private var showSettings: Bool = false
 
     var body: some View {
         ZStack {
-            LinearGradient(colors: [Color.black, Color.gray.opacity(0.4)], startPoint: .topLeading, endPoint: .bottomTrailing)
+            LinearGradient(colors: [Color(red: 0.05, green: 0.06, blue: 0.12), Color.blue.opacity(0.22), Color.cyan.opacity(0.2)], startPoint: .topLeading, endPoint: .bottomTrailing)
                 .ignoresSafeArea()
 
-            VStack(spacing: 16) {
-                Text("Light It Up")
-                    .font(.largeTitle).bold()
-                    .foregroundStyle(.white)
+            Circle()
+                .fill(level.glowColor.opacity(0.16))
+                .frame(width: 260, height: 260)
+                .blur(radius: 42)
+                .offset(x: 140, y: -240)
 
-                HStack(spacing: 12) {
-                    StatBlock(title: "Score", value: "\(score)")
-                    StatBlock(title: "Best", value: "\(highScore)")
-                    StatBlock(title: "Level", value: "\(level.rawValue)")
-                    StatBlock(title: "Time", value: "\(timeLeft)s", isWarning: isPlaying && timeLeft <= 5)
-                }
-
-                LazyVGrid(columns: level.gridColumns, spacing: 12) {
-                    ForEach(Array(cards.enumerated()), id: \.element) { index, card in
-                        CardView(isLit: card.isLit, color: level.glowColor)
-                            .onTapGesture { handleTap(on: index) }
-                            .animation(.easeInOut(duration: 0.15), value: card.isLit)
+            ScrollView(showsIndicators: false) {
+                VStack(spacing: 18) {
+                    VStack(alignment: .leading, spacing: 10) {
+                        Text("Light It Up")
+                            .font(.system(size: 36, weight: .heavy, design: .rounded))
+                            .foregroundStyle(.white)
+                        Text("Tap the lit cards before they fade out.")
+                            .font(.headline)
+                            .foregroundStyle(.white.opacity(0.82))
+                        Text(isPlaying ? "Stay sharp and build your score." : "A fresh grid is ready when you are.")
+                            .font(.subheadline)
+                            .foregroundStyle(.white.opacity(0.72))
                     }
-                }
-                .padding(.vertical, 8)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(20)
+                    .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 28, style: .continuous))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 28, style: .continuous)
+                            .stroke(.white.opacity(0.12), lineWidth: 1)
+                    )
 
-                HStack(spacing: 16) {
-                    Button(isPlaying ? "Restart" : "Start") { resetGame(start: true) }
-                        .buttonStyle(.borderedProminent)
-
-                    if isPlaying {
-                        Button("Stop") { resetGame(start: false) }
-                            .buttonStyle(.bordered)
+                    LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
+                        StatBlock(title: "Score", value: "\(score)")
+                        StatBlock(title: "Best", value: "\(highScore)")
+                        StatBlock(title: "Level", value: "\(level.rawValue)")
+                        StatBlock(title: "Time", value: "\(timeLeft)s", isWarning: isPlaying && timeLeft <= 5)
                     }
-                }
 
-                Spacer(minLength: 0)
+                    VStack(spacing: 14) {
+                        Text("Use the settings button in the top-right corner to change the round length.")
+                            .font(.subheadline)
+                            .foregroundStyle(.white.opacity(0.76))
+                            .multilineTextAlignment(.center)
+
+                        LazyVGrid(columns: level.gridColumns, spacing: 12) {
+                            ForEach(Array(cards.enumerated()), id: \.element) { index, card in
+                                CardView(isLit: card.isLit, color: level.glowColor)
+                                    .onTapGesture { handleTap(on: index) }
+                                    .animation(.easeInOut(duration: 0.15), value: card.isLit)
+                            }
+                        }
+                        .padding(16)
+                        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 28, style: .continuous))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 28, style: .continuous)
+                                .stroke(.white.opacity(0.12), lineWidth: 1)
+                        )
+
+                        HStack(spacing: 12) {
+                            Button(isPlaying ? "Restart" : "Start") { resetGame(start: true) }
+                                .buttonStyle(.borderedProminent)
+
+                            if isPlaying {
+                                Button("Stop") { resetGame(start: false) }
+                                    .buttonStyle(.bordered)
+                            }
+                        }
+                    }
+                    .padding(18)
+                    .frame(maxWidth: .infinity)
+                    .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 28, style: .continuous))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 28, style: .continuous)
+                            .stroke(.white.opacity(0.12), lineWidth: 1)
+                    )
+                }
+                .padding(.horizontal, 18)
+                .padding(.vertical, 18)
             }
-            .padding()
 
             if showLevelFlash {
                 Color.white.opacity(0.25)
@@ -68,7 +110,30 @@ struct LightItUpView: View {
                     .transition(.opacity)
             }
         }
-        .onAppear { timeLeft = roundLength; configureLevel(for: roundLength - timeLeft) }
+        .navigationTitle("Light It Up")
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                SettingsToolbarButton {
+                    showSettings = true
+                }
+            }
+        }
+        .sheet(isPresented: $showSettings) {
+            SettingsView(roundLength: $roundLength)
+        }
+        .onAppear {
+            timeLeft = roundLength
+            configureLevel(for: 0)
+            if cards.isEmpty {
+                rebuildCards()
+            }
+        }
+        .onChange(of: roundLength) { newValue in
+            if !isPlaying {
+                timeLeft = newValue
+            }
+        }
         .onDisappear { stopAllTimers() }
     }
 
@@ -225,5 +290,7 @@ private struct CardView: View {
 }
 
 #Preview {
-    LightItUpView()
+    NavigationStack {
+        LightItUpView()
+    }
 }

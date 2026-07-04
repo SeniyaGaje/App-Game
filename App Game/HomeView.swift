@@ -10,85 +10,112 @@ import SwiftUI
 struct HomeView: View {
     @AppStorage("tapFrenzyHighScore") private var tapFrenzyHighScore: Int = 0
     @AppStorage("lightItUpHighScore") private var lightItUpHighScore: Int = 0
-    @AppStorage("roundLength") private var roundLength: Int = 60 // settings: 30, 60, 90
-
-    @State private var showSettings: Bool = false
-    @State private var animateBG: Bool = false
 
     var body: some View {
         NavigationStack {
             ZStack {
-                // Animated cosmic gradient background
-                LinearGradient(colors: [Color.black, Color.purple.opacity(0.5), Color.blue.opacity(0.4)], startPoint: .topLeading, endPoint: .bottomTrailing)
+                LinearGradient(colors: [Color(red: 0.05, green: 0.06, blue: 0.12), Color(red: 0.19, green: 0.16, blue: 0.34), Color(red: 0.05, green: 0.12, blue: 0.2)], startPoint: .topLeading, endPoint: .bottomTrailing)
                     .ignoresSafeArea()
                     .overlay(
-                        // Subtle animated particles
                         AnimatedStars()
                             .allowsHitTesting(false)
                     )
 
-                VStack(spacing: 24) {
-                    // Title with glass effect
-                    Text("Reaction Games")
-                        .font(.system(size: 36, weight: .heavy))
-                        .foregroundStyle(.white)
-                        .padding(.horizontal, 16)
-                        .padding(.vertical, 10)
-                        .background(
-                            RoundedRectangle(cornerRadius: 16, style: .continuous)
-                                .fill(.ultraThinMaterial)
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: 16, style: .continuous)
-                                        .stroke(LinearGradient(colors: [.white.opacity(0.6), .clear], startPoint: .topLeading, endPoint: .bottomTrailing), lineWidth: 1)
-                                )
+                Circle()
+                    .fill(Color.cyan.opacity(0.16))
+                    .frame(width: 260, height: 260)
+                    .blur(radius: 40)
+                    .offset(x: 150, y: -260)
+
+                Circle()
+                    .fill(Color.orange.opacity(0.14))
+                    .frame(width: 220, height: 220)
+                    .blur(radius: 44)
+                    .offset(x: -150, y: 280)
+
+                ScrollView(showsIndicators: false) {
+                    VStack(alignment: .leading, spacing: 20) {
+                        VStack(alignment: .leading, spacing: 14) {
+                            Text("Reaction Games")
+                                .font(.system(size: 38, weight: .heavy, design: .rounded))
+                                .foregroundStyle(.white)
+
+                            Text("Fast rounds, clean feedback, and friendly game screens built for quick play.")
+                                .font(.headline)
+                                .foregroundStyle(.white.opacity(0.82))
+                                .fixedSize(horizontal: false, vertical: true)
+
+                            HStack(spacing: 10) {
+                                labelChip("Tap fast", systemImage: "bolt.fill")
+                                labelChip("Track best scores", systemImage: "chart.line.uptrend.xyaxis")
+                            }
+                        }
+                        .padding(20)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 28, style: .continuous))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 28, style: .continuous)
+                                .stroke(.white.opacity(0.14), lineWidth: 1)
                         )
-                        .shadow(color: .black.opacity(0.3), radius: 12, x: 0, y: 10)
-                        .padding(.top, 24)
 
-                    VStack(spacing: 16) {
-                        NavigationLink {
-                            TapFrenzyView()
-                        } label: {
-                            LargeNavButton(title: "Tap Frenzy", subtitle: "Best: \(tapFrenzyHighScore)", color: .green, icon: "bolt.fill")
-                        }
-                        .buttonStyle(.plain)
+                        VStack(alignment: .leading, spacing: 14) {
+                            Text("Choose a mode")
+                                .font(.headline)
+                                .foregroundStyle(.white.opacity(0.9))
 
-                        NavigationLink {
-                            LightItUpView()
-                        } label: {
-                            LargeNavButton(title: "Light It Up", subtitle: "Best: \(lightItUpHighScore)", color: .blue, icon: "lightbulb.max.fill")
-                        }
-                        .buttonStyle(.plain)
+                            NavigationLink {
+                                TapFrenzyView()
+                            } label: {
+                                LargeNavButton(title: "Tap Frenzy", subtitle: "Best score: \(tapFrenzyHighScore)  •  Pure speed", color: .green, icon: "bolt.fill")
+                            }
+                            .buttonStyle(.plain)
 
-                        NavigationLink {
-                            QuizRushView()
-                        } label: {
-                            LargeNavButton(title: "Quiz Rush", subtitle: "Live Trivia", color: .orange, icon: "questionmark.circle.fill")
+                            NavigationLink {
+                                LightItUpView()
+                            } label: {
+                                LargeNavButton(title: "Light It Up", subtitle: "Best score: \(lightItUpHighScore)  •  Pattern timing", color: .blue, icon: "lightbulb.max.fill")
+                            }
+                            .buttonStyle(.plain)
+
+                            NavigationLink {
+                                QuizRushView()
+                            } label: {
+                                LargeNavButton(title: "Quiz Rush", subtitle: "10 trivia questions  •  Build a streak", color: .orange, icon: "questionmark.circle.fill")
+                            }
+                            .buttonStyle(.plain)
                         }
-                        .buttonStyle(.plain)
+
+                        VStack(alignment: .leading, spacing: 10) {
+                            Text("Tip")
+                                .font(.headline)
+                                .foregroundStyle(.white.opacity(0.9))
+                            Text("Open each game to find its settings button in the top-right corner.")
+                                .font(.subheadline)
+                                .foregroundStyle(.white.opacity(0.75))
+                        }
+                        .padding(18)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .background(.white.opacity(0.08), in: RoundedRectangle(cornerRadius: 22, style: .continuous))
                     }
-                    .padding(.horizontal)
-
-                    Spacer()
+                    .padding(.horizontal, 18)
+                    .padding(.top, 20)
+                    .padding(.bottom, 28)
                 }
             }
-            .toolbar {
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button {
-                        showSettings.toggle()
-                    } label: {
-                        Image(systemName: "gearshape.fill")
-                            .font(.headline)
-                            .foregroundStyle(.white)
-                            .padding(8)
-                            .background(.ultraThinMaterial, in: Circle())
-                    }
-                }
-            }
-            .sheet(isPresented: $showSettings) {
-                SettingsView(roundLength: $roundLength)
-            }
+            .toolbar(.hidden, for: .navigationBar)
         }
+    }
+
+    private func labelChip(_ title: String, systemImage: String) -> some View {
+        Label(title, systemImage: systemImage)
+            .font(.subheadline.weight(.semibold))
+            .foregroundStyle(.white.opacity(0.92))
+            .padding(.vertical, 9)
+            .padding(.horizontal, 12)
+            .background(.white.opacity(0.09), in: Capsule())
+            .overlay(
+                Capsule().stroke(.white.opacity(0.12), lineWidth: 1)
+            )
     }
 }
 
@@ -146,14 +173,44 @@ private struct LargeNavButton: View {
     }
 }
 
-private struct SettingsView: View {
+struct SettingsToolbarButton: View {
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            Image(systemName: "slider.horizontal.3")
+                .font(.headline.weight(.semibold))
+                .foregroundStyle(.white)
+                .padding(10)
+                .background(.ultraThinMaterial, in: Circle())
+                .overlay(
+                    Circle().stroke(.white.opacity(0.18), lineWidth: 1)
+                )
+        }
+        .accessibilityLabel("Game settings")
+    }
+}
+
+struct SettingsView: View {
     @Binding var roundLength: Int
 
     var body: some View {
         NavigationStack {
             ZStack {
-                LinearGradient(colors: [Color.black, Color.indigo.opacity(0.4)], startPoint: .topLeading, endPoint: .bottomTrailing)
+                LinearGradient(colors: [Color(red: 0.05, green: 0.06, blue: 0.12), Color.indigo.opacity(0.42), Color.blue.opacity(0.26)], startPoint: .topLeading, endPoint: .bottomTrailing)
                     .ignoresSafeArea()
+                Circle()
+                    .fill(Color.indigo.opacity(0.22))
+                    .frame(width: 220, height: 220)
+                    .blur(radius: 42)
+                    .offset(x: 130, y: -220)
+
+                Circle()
+                    .fill(Color.cyan.opacity(0.16))
+                    .frame(width: 200, height: 200)
+                    .blur(radius: 40)
+                    .offset(x: -130, y: 220)
+
                 Form {
                     Section("Round Length") {
                         Picker("Round Length", selection: $roundLength) {
@@ -163,11 +220,16 @@ private struct SettingsView: View {
                         }
                         .pickerStyle(.segmented)
                         .tint(.indigo)
+
+                        Text("This applies to timed games. Choose the pace that feels right for your session.")
+                            .font(.footnote)
+                            .foregroundStyle(.secondary)
                     }
                     .headerProminence(.increased)
                 }
             }
             .navigationTitle("Settings")
+            .navigationBarTitleDisplayMode(.inline)
         }
     }
 }

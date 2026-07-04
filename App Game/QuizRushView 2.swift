@@ -3,36 +3,52 @@ import SwiftUI
 struct QuizRushView: View {
     @StateObject private var vm = QuizRushViewModel()
     @State private var shake: CGFloat = 0
+    @AppStorage("roundLength") private var roundLength: Int = 60
+    @State private var showSettings: Bool = false
 
     var body: some View {
         ZStack {
             LinearGradient(
                 colors: [
-                    Color.black,
-                    Color.orange.opacity(0.5),
-                    Color.red.opacity(0.4)
+                    Color(red: 0.07, green: 0.05, blue: 0.11),
+                    Color.orange.opacity(0.48),
+                    Color.red.opacity(0.34)
                 ],
                 startPoint: .topLeading,
                 endPoint: .bottomTrailing
             )
             .ignoresSafeArea()
 
-            VStack(spacing: 20) {
-                header
+            Circle()
+                .fill(Color.orange.opacity(0.16))
+                .frame(width: 220, height: 220)
+                .blur(radius: 42)
+                .offset(x: 140, y: -250)
 
-                Spacer(minLength: 0)
+            ScrollView(showsIndicators: false) {
+                VStack(spacing: 18) {
+                    header
 
-                stateContent
-                    .frame(maxWidth: .infinity)
-
-                Spacer(minLength: 0)
+                    stateContent
+                        .frame(maxWidth: .infinity)
+                }
+                .padding(.horizontal, 18)
+                .padding(.top, 10)
+                .padding(.bottom, 24)
             }
-            .padding(.horizontal, 20)
-            .padding(.top, 8)
-            .padding(.bottom, 24)
         }
         .navigationTitle("Quiz Rush")
         .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                SettingsToolbarButton {
+                    showSettings = true
+                }
+            }
+        }
+        .sheet(isPresented: $showSettings) {
+            SettingsView(roundLength: $roundLength)
+        }
         .onAppear {
             if case .idle = vm.state {
                 Task { await vm.load() }
@@ -41,32 +57,44 @@ struct QuizRushView: View {
     }
 
     private var header: some View {
-        HStack(alignment: .top) {
-            VStack(alignment: .leading, spacing: 4) {
-                Text("Quiz Rush")
-                    .font(.title)
-                    .fontWeight(.bold)
-                    .foregroundColor(.white)
-                Text("Open Trivia DB")
-                    .font(.subheadline)
-                    .foregroundColor(.white.opacity(0.8))
+        VStack(alignment: .leading, spacing: 14) {
+            Text("Quiz Rush")
+                .font(.system(size: 36, weight: .heavy, design: .rounded))
+                .foregroundColor(.white)
+
+            Text("Answer quickly, keep your streak alive, and finish strong.")
+                .font(.headline)
+                .foregroundColor(.white.opacity(0.82))
+
+            HStack(spacing: 10) {
+                pill("Open Trivia DB", systemImage: "globe")
+                pill("10 questions", systemImage: "questionmark.circle.fill")
             }
 
-            Spacer()
-
-            VStack(alignment: .trailing, spacing: 4) {
-                Text("\(vm.progressText)")
-                    .font(.subheadline)
-                    .foregroundColor(.white)
-                Text("Score \(vm.score)")
-                    .font(.subheadline)
-                    .foregroundColor(.white)
-                Text("Streak \(vm.streak)")
-                    .font(.subheadline)
-                    .foregroundColor(.white)
+            HStack(spacing: 12) {
+                StatBlock(title: "Progress", value: vm.progressText)
+                StatBlock(title: "Score", value: "\(vm.score)")
+                StatBlock(title: "Streak", value: "\(vm.streak)")
             }
         }
-        .padding(.top, 12)
+        .padding(20)
+        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 28, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: 28, style: .continuous)
+                .stroke(.white.opacity(0.12), lineWidth: 1)
+        )
+    }
+
+    private func pill(_ title: String, systemImage: String) -> some View {
+        Label(title, systemImage: systemImage)
+            .font(.subheadline.weight(.semibold))
+            .foregroundStyle(.white.opacity(0.92))
+            .padding(.vertical, 9)
+            .padding(.horizontal, 12)
+            .background(.white.opacity(0.09), in: Capsule())
+            .overlay(
+                Capsule().stroke(.white.opacity(0.12), lineWidth: 1)
+            )
     }
 
     @ViewBuilder
@@ -149,6 +177,10 @@ struct QuizRushView: View {
                 .padding(.vertical, 24)
                 .padding(.horizontal, 20)
                 .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 28, style: .continuous))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 28, style: .continuous)
+                        .stroke(.white.opacity(0.12), lineWidth: 1)
+                )
             }
 
         case .finished:

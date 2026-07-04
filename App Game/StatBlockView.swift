@@ -13,18 +13,26 @@ struct StatBlock: View {
     var isWarning: Bool = false
 
     var body: some View {
-        VStack {
+        VStack(spacing: 8) {
             Text(title)
-                .font(.headline)
-                .foregroundStyle(.white.opacity(0.9))
+                .font(.caption.weight(.semibold))
+                .textCase(.uppercase)
+                .tracking(1)
+                .foregroundStyle(.white.opacity(0.7))
             Text(value)
-                .font(.system(size: 32, weight: .bold))
+                .font(.system(size: 30, weight: .bold, design: .rounded))
                 .monospacedDigit()
                 .foregroundStyle(isWarning ? .red : .white)
         }
-        .padding(12)
-        .background(.white.opacity(0.06))
-        .clipShape(RoundedRectangle(cornerRadius: 12))
+        .frame(maxWidth: .infinity, minHeight: 84)
+        .padding(.vertical, 14)
+        .padding(.horizontal, 10)
+        .background(.white.opacity(0.08), in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                .stroke(.white.opacity(0.1), lineWidth: 1)
+        )
+        .shadow(color: .black.opacity(0.18), radius: 8, x: 0, y: 6)
     }
 }
 
