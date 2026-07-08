@@ -14,39 +14,52 @@ struct HomeTab: View {
     var body: some View {
         NavigationStack {
             ZStack {
-                LinearGradient(colors: [Color(red: 0.05, green: 0.06, blue: 0.12), Color(red: 0.19, green: 0.16, blue: 0.34), Color(red: 0.05, green: 0.12, blue: 0.2)], startPoint: .topLeading, endPoint: .bottomTrailing)
+                Color(red: 0.04, green: 0.04, blue: 0.08)
                     .ignoresSafeArea()
-                    .overlay(
-                        AnimatedStars()
-                            .allowsHitTesting(false)
-                    )
+                
+                // Modern blurred blobs
+                Circle()
+                    .fill(Color.purple.opacity(0.35))
+                    .frame(width: 350, height: 350)
+                    .blur(radius: 80)
+                    .offset(x: -150, y: -250)
 
                 Circle()
-                    .fill(Color.cyan.opacity(0.16))
-                    .frame(width: 260, height: 260)
-                    .blur(radius: 40)
-                    .offset(x: 150, y: -260)
-
+                    .fill(Color.cyan.opacity(0.35))
+                    .frame(width: 350, height: 350)
+                    .blur(radius: 80)
+                    .offset(x: 150, y: 250)
+                
                 Circle()
-                    .fill(Color.orange.opacity(0.14))
-                    .frame(width: 220, height: 220)
-                    .blur(radius: 44)
-                    .offset(x: -150, y: 280)
+                    .fill(Color.orange.opacity(0.25))
+                    .frame(width: 250, height: 250)
+                    .blur(radius: 60)
+                    .offset(x: 100, y: -50)
+
+                AnimatedStars()
+                    .allowsHitTesting(false)
 
                 ScrollView(showsIndicators: false) {
                     VStack(alignment: .leading, spacing: 24) {
 
                         // MARK: Hero
-                        VStack(alignment: .leading, spacing: 8) {
-                            Text("Reaction Games")
-                                .font(.system(size: 38, weight: .heavy, design: .rounded))
-                                .foregroundStyle(.white)
+                        VStack(alignment: .center, spacing: 6) {
+                            Text("Gamify")
+                                .font(.system(size: 48, weight: .black, design: .rounded))
+                                .foregroundStyle(
+                                    LinearGradient(colors: [.white, .white.opacity(0.6)], startPoint: .topLeading, endPoint: .bottomTrailing)
+                                )
+                                .shadow(color: .purple.opacity(0.4), radius: 20)
 
-                            Text("Fast rounds, clean feedback, friendly play.")
-                                .font(.headline)
-                                .foregroundStyle(.white.opacity(0.78))
+                            Text("Elevate your focus.\nChallenge your reflexes.")
+                                .font(.title3.weight(.medium))
+                                .foregroundStyle(.white.opacity(0.6))
+                                .lineSpacing(4)
+                                .multilineTextAlignment(.center)
                         }
-                        .padding(.top, 8)
+                        .frame(maxWidth: .infinity, alignment: .center)
+                        .padding(.top, 16)
+                        .padding(.bottom, 8)
 
                         // MARK: Game Cards
                         VStack(spacing: 14) {
@@ -106,30 +119,28 @@ private struct LargeNavButton: View {
 
     var body: some View {
         ZStack(alignment: .bottomLeading) {
-            RoundedRectangle(cornerRadius: 26, style: .continuous)
-                .fill(
-                    LinearGradient(
-                        colors: [color.opacity(0.65), color.opacity(0.25), .black.opacity(0.5)],
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    )
+            RoundedRectangle(cornerRadius: 32, style: .continuous)
+                .fill(.black.opacity(0.35))
+                .background(
+                    RoundedRectangle(cornerRadius: 32, style: .continuous)
+                        .fill(color.opacity(0.15))
                 )
                 .overlay(
-                    RoundedRectangle(cornerRadius: 26, style: .continuous)
-                        .stroke(
-                            LinearGradient(colors: [color.opacity(0.9), color.opacity(0.2)], startPoint: .topLeading, endPoint: .bottomTrailing),
-                            lineWidth: 1.5
-                        )
+                    RoundedRectangle(cornerRadius: 32, style: .continuous)
+                        .stroke(LinearGradient(colors: [.white.opacity(0.3), .white.opacity(0.05)], startPoint: .topLeading, endPoint: .bottomTrailing), lineWidth: 1.5)
                 )
-                .shadow(color: color.opacity(0.5), radius: 20, x: 0, y: 14)
+                .shadow(color: color.opacity(0.2), radius: 25, x: 0, y: 10)
 
-            HStack(alignment: .center, spacing: 16) {
+            HStack(alignment: .center, spacing: 18) {
                 ZStack {
                     Circle()
-                        .fill(color.opacity(0.3))
-                        .frame(width: 58, height: 58)
-                        .overlay(Circle().stroke(color.opacity(0.7), lineWidth: 1.5))
-                        .shadow(color: color.opacity(0.6), radius: 10, x: 0, y: 6)
+                        .fill(
+                            LinearGradient(colors: [color.opacity(0.8), color.opacity(0.4)], startPoint: .topLeading, endPoint: .bottomTrailing)
+                        )
+                        .frame(width: 60, height: 60)
+                        .shadow(color: color.opacity(0.6), radius: 12, x: 0, y: 6)
+                        .overlay(Circle().stroke(.white.opacity(0.4), lineWidth: 1))
+
                     Image(systemName: icon)
                         .font(.system(size: 26, weight: .bold))
                         .foregroundStyle(.white)

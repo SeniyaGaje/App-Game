@@ -82,7 +82,8 @@ final class QuizRushViewModel: ObservableObject {
         }
 
         Task { [weak self] in
-            try? await Task.sleep(nanoseconds: 650_000_000)
+            let delay = answer == current.correctAnswer ? 750_000_000 : 2_200_000_000
+            try? await Task.sleep(nanoseconds: UInt64(delay))
             guard let self else { return }
             self.advanceToNextQuestion()
         }
@@ -98,6 +99,8 @@ final class QuizRushViewModel: ObservableObject {
 
         if currentIndex >= questions.count {
             state = .finished
+            let name = UserDefaults.standard.string(forKey: "playerName") ?? "Player 1"
+            StatsVM.shared.addSession(mode: .quizRush, score: score, playerName: name)
         }
     }
     

@@ -10,6 +10,7 @@ import SwiftUI
 struct TapFrenzyView: View {
     @AppStorage("tapFrenzyHighScore") private var highScore: Int = 0
     @AppStorage("roundLength") private var roundLength: Int = 60
+    @AppStorage("playerName") private var playerName: String = "Player 1"
 
     @State private var score: Int = 0
     @State private var timeLeft: Int = 60
@@ -57,7 +58,7 @@ struct TapFrenzyView: View {
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(20)
-                    .background(Color(red: 0.10, green: 0.12, blue: 0.22), in: RoundedRectangle(cornerRadius: 28, style: .continuous))
+                    .background(.black.opacity(0.35), in: RoundedRectangle(cornerRadius: 28, style: .continuous))
                     .overlay(
                         RoundedRectangle(cornerRadius: 28, style: .continuous)
                             .stroke(.white.opacity(0.15), lineWidth: 1)
@@ -94,7 +95,7 @@ struct TapFrenzyView: View {
                                                 endPoint: .bottomTrailing
                                               )
                                             : LinearGradient(
-                                                colors: [Color(red: 0.12, green: 0.14, blue: 0.22), Color(red: 0.08, green: 0.10, blue: 0.18)],
+                                                colors: [.black.opacity(0.3), .black.opacity(0.45)],
                                                 startPoint: .topLeading,
                                                 endPoint: .bottomTrailing
                                               )
@@ -131,11 +132,18 @@ struct TapFrenzyView: View {
                                 .buttonStyle(.bordered)
                                 .tint(.white.opacity(0.8))
                             }
+                            if !isPlaying && score > 0 {
+                                ShareLink(item: "I just scored \(score) on Tap Frenzy — beat that!") {
+                                    Label("Share", systemImage: "square.and.arrow.up")
+                                }
+                                .buttonStyle(.bordered)
+                                .tint(.cyan.opacity(0.8))
+                            }
                         }
                     }
                     .padding(24)
                     .frame(maxWidth: .infinity)
-                    .background(Color(red: 0.10, green: 0.12, blue: 0.22), in: RoundedRectangle(cornerRadius: 32, style: .continuous))
+                    .background(.black.opacity(0.35), in: RoundedRectangle(cornerRadius: 32, style: .continuous))
                     .overlay(
                         RoundedRectangle(cornerRadius: 32, style: .continuous)
                             .stroke(.white.opacity(0.15), lineWidth: 1)
@@ -206,6 +214,7 @@ struct TapFrenzyView: View {
                 isPlaying = false
                 stopTimer()
                 if score > highScore { highScore = score }
+                StatsVM.shared.addSession(mode: .tapFrenzy, score: score, playerName: playerName)
             }
         }
     }

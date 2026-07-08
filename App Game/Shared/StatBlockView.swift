@@ -32,7 +32,7 @@ struct StatBlock: View {
         .frame(maxWidth: .infinity, minHeight: compact ? 54 : 84)
         .padding(.vertical, compact ? 8 : 14)
         .padding(.horizontal, compact ? 6 : 10)
-        .background(Color(red: 0.10, green: 0.12, blue: 0.22), in: RoundedRectangle(cornerRadius: compact ? 14 : 18, style: .continuous))
+        .background(.black.opacity(0.35), in: RoundedRectangle(cornerRadius: compact ? 14 : 18, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: compact ? 14 : 18, style: .continuous)
                 .stroke(.white.opacity(0.15), lineWidth: 1)

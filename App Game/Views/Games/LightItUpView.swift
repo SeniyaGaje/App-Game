@@ -15,6 +15,7 @@ import SwiftUI
 
 struct LightItUpView: View {
     @AppStorage("lightItUpHighScore") private var highScore: Int = 0
+    @AppStorage("playerName") private var playerName: String = "Player 1"
     let roundLength: Int = 60 // Hardcoded to exactly 60s (15s per level)
 
     // MARK: - State
@@ -80,7 +81,7 @@ struct LightItUpView: View {
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(.horizontal, 20)
                     .padding(.vertical, 16)
-                    .background(Color(red: 0.10, green: 0.12, blue: 0.22),
+                    .background(.black.opacity(0.35),
                                 in: RoundedRectangle(cornerRadius: 24, style: .continuous))
                     .overlay(
                         RoundedRectangle(cornerRadius: 24, style: .continuous)
@@ -117,7 +118,7 @@ struct LightItUpView: View {
                             }
                         }
                         .padding(14)
-                        .background(Color(red: 0.08, green: 0.10, blue: 0.20),
+                        .background(.black.opacity(0.45),
                                     in: RoundedRectangle(cornerRadius: 24, style: .continuous))
                         .overlay(
                             RoundedRectangle(cornerRadius: 24, style: .continuous)
@@ -142,7 +143,7 @@ struct LightItUpView: View {
                     }
                     .padding(18)
                     .frame(maxWidth: .infinity)
-                    .background(Color(red: 0.10, green: 0.12, blue: 0.22),
+                    .background(.black.opacity(0.35),
                                 in: RoundedRectangle(cornerRadius: 28, style: .continuous))
                     .overlay(
                         RoundedRectangle(cornerRadius: 28, style: .continuous)
@@ -238,7 +239,7 @@ struct LightItUpView: View {
         }
         .padding(.horizontal, 18)
         .padding(.vertical, 10)
-        .background(Color(red: 0.10, green: 0.12, blue: 0.22),
+        .background(.black.opacity(0.35),
                     in: RoundedRectangle(cornerRadius: 16, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: 16, style: .continuous)
@@ -305,9 +306,14 @@ struct LightItUpView: View {
                     .tint(.red.opacity(0.85))
                     .font(.headline)
                     .controlSize(.large)
+                
+                ShareLink(item: "I survived to Level \(level.rawValue) with \(score) points on Light It Up — beat that!")
+                    .font(.subheadline.bold())
+                    .foregroundStyle(.white)
+                    .padding(.top, 4)
             }
             .padding(32)
-            .background(Color(red: 0.08, green: 0.10, blue: 0.18),
+            .background(.black.opacity(0.45),
                         in: RoundedRectangle(cornerRadius: 28))
             .overlay(
                 RoundedRectangle(cornerRadius: 28)
@@ -348,9 +354,14 @@ struct LightItUpView: View {
                     .tint(.green.opacity(0.85))
                     .font(.headline)
                     .controlSize(.large)
+                
+                ShareLink(item: "I beat Light It Up with \(score) points — beat that!")
+                    .font(.subheadline.bold())
+                    .foregroundStyle(.white)
+                    .padding(.top, 4)
             }
             .padding(32)
-            .background(Color(red: 0.08, green: 0.10, blue: 0.18),
+            .background(.black.opacity(0.45),
                         in: RoundedRectangle(cornerRadius: 28))
             .overlay(
                 RoundedRectangle(cornerRadius: 28)
@@ -418,6 +429,7 @@ struct LightItUpView: View {
         stopAllTimers()
         clearLit()
         if score > highScore { highScore = score }
+        StatsVM.shared.addSession(mode: .lightItUp, score: score, playerName: playerName)
         withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
             if complete { isRoundComplete = true } else { isGameOver = true }
         }
@@ -530,7 +542,7 @@ private struct CardView: View {
                 .fill(
                     isLit
                         ? color.opacity(0.88)
-                        : Color(red: 0.10, green: 0.12, blue: 0.20)
+                        : .black.opacity(0.45)
                 )
                 .overlay(
                     RoundedRectangle(cornerRadius: 12)

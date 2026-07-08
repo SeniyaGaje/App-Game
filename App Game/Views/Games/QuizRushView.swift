@@ -68,7 +68,7 @@ struct QuizRushView: View {
             }
         }
         .padding(20)
-        .background(Color(red: 0.10, green: 0.12, blue: 0.22), in: RoundedRectangle(cornerRadius: 28, style: .continuous))
+        .background(.black.opacity(0.35), in: RoundedRectangle(cornerRadius: 28, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: 28, style: .continuous)
                 .stroke(.white.opacity(0.15), lineWidth: 1)
@@ -93,7 +93,7 @@ struct QuizRushView: View {
             .padding(.vertical, 36)
             .padding(.horizontal, 24)
             .frame(maxWidth: .infinity)
-            .background(Color(red: 0.10, green: 0.12, blue: 0.22), in: RoundedRectangle(cornerRadius: 24, style: .continuous))
+            .background(.black.opacity(0.35), in: RoundedRectangle(cornerRadius: 24, style: .continuous))
 
         case .failed(let message):
             VStack(spacing: 16) {
@@ -116,7 +116,7 @@ struct QuizRushView: View {
             .padding(.vertical, 32)
             .padding(.horizontal, 24)
             .frame(maxWidth: .infinity)
-            .background(Color(red: 0.10, green: 0.12, blue: 0.22), in: RoundedRectangle(cornerRadius: 24, style: .continuous))
+            .background(.black.opacity(0.35), in: RoundedRectangle(cornerRadius: 24, style: .continuous))
 
         case .loaded:
             if let question = vm.currentQuestion() {
@@ -178,7 +178,7 @@ struct QuizRushView: View {
                 }
                 .padding(.vertical, 24)
                 .padding(.horizontal, 20)
-                .background(Color(red: 0.10, green: 0.12, blue: 0.22), in: RoundedRectangle(cornerRadius: 28, style: .continuous))
+                .background(.black.opacity(0.35), in: RoundedRectangle(cornerRadius: 28, style: .continuous))
                 .overlay(
                     RoundedRectangle(cornerRadius: 28, style: .continuous)
                         .stroke(.white.opacity(0.15), lineWidth: 1)
@@ -213,11 +213,16 @@ struct QuizRushView: View {
                 }
                 .buttonStyle(.borderedProminent)
                 .tint(.orange)
+                
+                ShareLink(item: "I just scored \(vm.score) on Quiz Rush — beat that!")
+                    .font(.headline)
+                    .foregroundStyle(.white)
+                    .padding(.top, 4)
             }
             .padding(.vertical, 36)
             .padding(.horizontal, 24)
             .frame(maxWidth: .infinity)
-            .background(Color(red: 0.10, green: 0.12, blue: 0.22), in: RoundedRectangle(cornerRadius: 24, style: .continuous))
+            .background(.black.opacity(0.35), in: RoundedRectangle(cornerRadius: 24, style: .continuous))
         }
     }
 
