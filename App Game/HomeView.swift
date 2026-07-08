@@ -34,88 +34,67 @@ struct HomeView: View {
                     .offset(x: -150, y: 280)
 
                 ScrollView(showsIndicators: false) {
-                    VStack(alignment: .leading, spacing: 20) {
-                        VStack(alignment: .leading, spacing: 14) {
+                    VStack(alignment: .leading, spacing: 24) {
+
+                        // MARK: Hero
+                        VStack(alignment: .leading, spacing: 8) {
                             Text("Reaction Games")
                                 .font(.system(size: 38, weight: .heavy, design: .rounded))
                                 .foregroundStyle(.white)
 
-                            Text("Fast rounds, clean feedback, and friendly game screens built for quick play.")
+                            Text("Fast rounds, clean feedback, friendly play.")
                                 .font(.headline)
-                                .foregroundStyle(.white.opacity(0.82))
-                                .fixedSize(horizontal: false, vertical: true)
-
-                            HStack(spacing: 10) {
-                                labelChip("Tap fast", systemImage: "bolt.fill")
-                                labelChip("Track best scores", systemImage: "chart.line.uptrend.xyaxis")
-                            }
+                                .foregroundStyle(.white.opacity(0.78))
                         }
-                        .padding(20)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 28, style: .continuous))
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 28, style: .continuous)
-                                .stroke(.white.opacity(0.14), lineWidth: 1)
-                        )
+                        .padding(.top, 8)
 
-                        VStack(alignment: .leading, spacing: 14) {
-                            Text("Choose a mode")
-                                .font(.headline)
-                                .foregroundStyle(.white.opacity(0.9))
-
+                        // MARK: Game Cards
+                        VStack(spacing: 14) {
                             NavigationLink {
                                 TapFrenzyView()
                             } label: {
-                                LargeNavButton(title: "Tap Frenzy", subtitle: "Best score: \(tapFrenzyHighScore)  •  Pure speed", color: .green, icon: "bolt.fill")
+                                LargeNavButton(
+                                    title: "Tap Frenzy",
+                                    subtitle: "Best: \(tapFrenzyHighScore)  •  Pure speed",
+                                    color: .green,
+                                    icon: "bolt.fill"
+                                )
                             }
                             .buttonStyle(.plain)
 
                             NavigationLink {
                                 LightItUpView()
                             } label: {
-                                LargeNavButton(title: "Light It Up", subtitle: "Best score: \(lightItUpHighScore)  •  Pattern timing", color: .blue, icon: "lightbulb.max.fill")
+                                LargeNavButton(
+                                    title: "Light It Up",
+                                    subtitle: "Best: \(lightItUpHighScore)  •  Pattern timing",
+                                    color: .cyan,
+                                    icon: "lightbulb.max.fill"
+                                )
                             }
                             .buttonStyle(.plain)
 
                             NavigationLink {
                                 QuizRushView()
                             } label: {
-                                LargeNavButton(title: "Quiz Rush", subtitle: "10 trivia questions  •  Build a streak", color: .orange, icon: "questionmark.circle.fill")
+                                LargeNavButton(
+                                    title: "Quiz Rush",
+                                    subtitle: "10 trivia questions  •  Build a streak",
+                                    color: .orange,
+                                    icon: "questionmark.circle.fill"
+                                )
                             }
                             .buttonStyle(.plain)
                         }
-
-                        VStack(alignment: .leading, spacing: 10) {
-                            Text("Tip")
-                                .font(.headline)
-                                .foregroundStyle(.white.opacity(0.9))
-                            Text("Open each game to find its settings button in the top-right corner.")
-                                .font(.subheadline)
-                                .foregroundStyle(.white.opacity(0.75))
-                        }
-                        .padding(18)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .background(.white.opacity(0.08), in: RoundedRectangle(cornerRadius: 22, style: .continuous))
                     }
-                    .padding(.horizontal, 18)
+                    .padding(.horizontal, 20)
                     .padding(.top, 20)
-                    .padding(.bottom, 28)
+                    .padding(.bottom, 32)
                 }
             }
             .toolbar(.hidden, for: .navigationBar)
+            .preferredColorScheme(.dark)
         }
-    }
-
-    private func labelChip(_ title: String, systemImage: String) -> some View {
-        Label(title, systemImage: systemImage)
-            .font(.subheadline.weight(.semibold))
-            .foregroundStyle(.white.opacity(0.92))
-            .padding(.vertical, 9)
-            .padding(.horizontal, 12)
-            .background(.white.opacity(0.09), in: Capsule())
-            .overlay(
-                Capsule().stroke(.white.opacity(0.12), lineWidth: 1)
-            )
     }
 }
 
@@ -127,48 +106,55 @@ private struct LargeNavButton: View {
 
     var body: some View {
         ZStack(alignment: .bottomLeading) {
-            RoundedRectangle(cornerRadius: 24, style: .continuous)
-                .fill(LinearGradient(colors: [color.opacity(0.55), .black.opacity(0.55)], startPoint: .topLeading, endPoint: .bottomTrailing))
-                .overlay(
-                    RoundedRectangle(cornerRadius: 24, style: .continuous)
-                        .stroke(LinearGradient(colors: [color.opacity(0.9), .clear], startPoint: .topLeading, endPoint: .bottomTrailing), lineWidth: 2)
+            RoundedRectangle(cornerRadius: 26, style: .continuous)
+                .fill(
+                    LinearGradient(
+                        colors: [color.opacity(0.65), color.opacity(0.25), .black.opacity(0.5)],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
                 )
-                .shadow(color: color.opacity(0.45), radius: 16, x: 0, y: 12)
                 .overlay(
-                    // Glow highlight
-                    RoundedRectangle(cornerRadius: 24, style: .continuous)
-                        .fill(color.opacity(0.15))
-                        .blur(radius: 20)
-                        .offset(y: -20)
+                    RoundedRectangle(cornerRadius: 26, style: .continuous)
+                        .stroke(
+                            LinearGradient(colors: [color.opacity(0.9), color.opacity(0.2)], startPoint: .topLeading, endPoint: .bottomTrailing),
+                            lineWidth: 1.5
+                        )
                 )
-            HStack(alignment: .center, spacing: 14) {
+                .shadow(color: color.opacity(0.5), radius: 20, x: 0, y: 14)
+
+            HStack(alignment: .center, spacing: 16) {
                 ZStack {
                     Circle()
-                        .fill(color.opacity(0.25))
-                        .frame(width: 54, height: 54)
-                        .overlay(Circle().stroke(color.opacity(0.6), lineWidth: 1))
-                        .shadow(color: color.opacity(0.5), radius: 8, x: 0, y: 6)
+                        .fill(color.opacity(0.3))
+                        .frame(width: 58, height: 58)
+                        .overlay(Circle().stroke(color.opacity(0.7), lineWidth: 1.5))
+                        .shadow(color: color.opacity(0.6), radius: 10, x: 0, y: 6)
                     Image(systemName: icon)
-                        .font(.system(size: 24, weight: .bold))
+                        .font(.system(size: 26, weight: .bold))
                         .foregroundStyle(.white)
                 }
-                VStack(alignment: .leading, spacing: 4) {
+
+                VStack(alignment: .leading, spacing: 5) {
                     Text(title)
-                        .font(.title2).bold()
+                        .font(.title2.bold())
                         .foregroundStyle(.white)
                     Text(subtitle)
                         .font(.subheadline)
-                        .foregroundStyle(.white.opacity(0.85))
+                        .foregroundStyle(.white.opacity(0.8))
                 }
+
                 Spacer()
+
                 Image(systemName: "chevron.right")
-                    .foregroundStyle(.white.opacity(0.7))
+                    .foregroundStyle(.white.opacity(0.6))
                     .font(.headline)
             }
-            .padding(20)
+            .padding(.horizontal, 20)
+            .padding(.vertical, 22)
         }
-        .frame(height: 120)
-        .contentShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
+        .frame(height: 110)
+        .contentShape(RoundedRectangle(cornerRadius: 26, style: .continuous))
         .hoverEffect(.lift)
     }
 }
@@ -182,9 +168,9 @@ struct SettingsToolbarButton: View {
                 .font(.headline.weight(.semibold))
                 .foregroundStyle(.white)
                 .padding(10)
-                .background(.ultraThinMaterial, in: Circle())
+                .background(Color(red: 0.12, green: 0.14, blue: 0.24), in: Circle())
                 .overlay(
-                    Circle().stroke(.white.opacity(0.18), lineWidth: 1)
+                    Circle().stroke(.white.opacity(0.2), lineWidth: 1)
                 )
         }
         .accessibilityLabel("Game settings")
@@ -215,6 +201,7 @@ struct SettingsView: View {
                     Section("Round Length") {
                         Picker("Round Length", selection: $roundLength) {
                             Text("30 s").tag(30)
+                            Text("40 s").tag(40)
                             Text("60 s").tag(60)
                             Text("90 s").tag(90)
                         }

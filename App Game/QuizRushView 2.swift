@@ -3,16 +3,14 @@ import SwiftUI
 struct QuizRushView: View {
     @StateObject private var vm = QuizRushViewModel()
     @State private var shake: CGFloat = 0
-    @AppStorage("roundLength") private var roundLength: Int = 60
-    @State private var showSettings: Bool = false
 
     var body: some View {
         ZStack {
             LinearGradient(
                 colors: [
                     Color(red: 0.07, green: 0.05, blue: 0.11),
-                    Color.orange.opacity(0.48),
-                    Color.red.opacity(0.34)
+                    Color.orange.opacity(0.38),
+                    Color.red.opacity(0.22)
                 ],
                 startPoint: .topLeading,
                 endPoint: .bottomTrailing
@@ -24,6 +22,12 @@ struct QuizRushView: View {
                 .frame(width: 220, height: 220)
                 .blur(radius: 42)
                 .offset(x: 140, y: -250)
+
+            Circle()
+                .fill(Color.red.opacity(0.10))
+                .frame(width: 200, height: 200)
+                .blur(radius: 44)
+                .offset(x: -140, y: 300)
 
             ScrollView(showsIndicators: false) {
                 VStack(spacing: 18) {
@@ -39,16 +43,7 @@ struct QuizRushView: View {
         }
         .navigationTitle("Quiz Rush")
         .navigationBarTitleDisplayMode(.inline)
-        .toolbar {
-            ToolbarItem(placement: .topBarTrailing) {
-                SettingsToolbarButton {
-                    showSettings = true
-                }
-            }
-        }
-        .sheet(isPresented: $showSettings) {
-            SettingsView(roundLength: $roundLength)
-        }
+        .preferredColorScheme(.dark)
         .onAppear {
             if case .idle = vm.state {
                 Task { await vm.load() }
@@ -57,19 +52,14 @@ struct QuizRushView: View {
     }
 
     private var header: some View {
-        VStack(alignment: .leading, spacing: 14) {
+        VStack(alignment: .leading, spacing: 12) {
             Text("Quiz Rush")
                 .font(.system(size: 36, weight: .heavy, design: .rounded))
-                .foregroundColor(.white)
+                .foregroundStyle(.white)
 
-            Text("Answer quickly, keep your streak alive, and finish strong.")
+            Text("Answer quickly, keep your streak alive.")
                 .font(.headline)
-                .foregroundColor(.white.opacity(0.82))
-
-            HStack(spacing: 10) {
-                pill("Open Trivia DB", systemImage: "globe")
-                pill("10 questions", systemImage: "questionmark.circle.fill")
-            }
+                .foregroundStyle(.white.opacity(0.78))
 
             HStack(spacing: 12) {
                 StatBlock(title: "Progress", value: vm.progressText)
@@ -78,23 +68,11 @@ struct QuizRushView: View {
             }
         }
         .padding(20)
-        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 28, style: .continuous))
+        .background(Color(red: 0.10, green: 0.12, blue: 0.22), in: RoundedRectangle(cornerRadius: 28, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: 28, style: .continuous)
-                .stroke(.white.opacity(0.12), lineWidth: 1)
+                .stroke(.white.opacity(0.15), lineWidth: 1)
         )
-    }
-
-    private func pill(_ title: String, systemImage: String) -> some View {
-        Label(title, systemImage: systemImage)
-            .font(.subheadline.weight(.semibold))
-            .foregroundStyle(.white.opacity(0.92))
-            .padding(.vertical, 9)
-            .padding(.horizontal, 12)
-            .background(.white.opacity(0.09), in: Capsule())
-            .overlay(
-                Capsule().stroke(.white.opacity(0.12), lineWidth: 1)
-            )
     }
 
     @ViewBuilder
@@ -103,49 +81,57 @@ struct QuizRushView: View {
         case .idle, .loading:
             VStack(spacing: 16) {
                 ProgressView()
-                    .tint(.white)
-                    .scaleEffect(1.2)
-                Text("Loading 10 trivia questions…")
+                    .tint(.orange)
+                    .scaleEffect(1.3)
+                Text("Loading trivia questions…")
                     .font(.headline)
-                    .foregroundColor(.white)
+                    .foregroundStyle(.white)
                 Text("Connecting to Open Trivia DB")
                     .font(.subheadline)
-                    .foregroundColor(.white.opacity(0.8))
+                    .foregroundStyle(.white.opacity(0.7))
             }
-            .padding(.vertical, 28)
+            .padding(.vertical, 36)
             .padding(.horizontal, 24)
-            .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 24, style: .continuous))
+            .frame(maxWidth: .infinity)
+            .background(Color(red: 0.10, green: 0.12, blue: 0.22), in: RoundedRectangle(cornerRadius: 24, style: .continuous))
 
         case .failed(let message):
             VStack(spacing: 16) {
+                Image(systemName: "wifi.slash")
+                    .font(.system(size: 40))
+                    .foregroundStyle(.orange)
                 Text("Could not load quiz")
-                    .font(.headline)
-                    .foregroundColor(.white)
+                    .font(.title3.bold())
+                    .foregroundStyle(.white)
                 Text(message)
                     .font(.subheadline)
-                    .foregroundColor(.white.opacity(0.9))
+                    .foregroundStyle(.white.opacity(0.75))
                     .multilineTextAlignment(.center)
                 Button("Retry") {
                     Task { await vm.retry() }
                 }
                 .buttonStyle(.borderedProminent)
+                .tint(.orange)
             }
-            .padding(.vertical, 28)
+            .padding(.vertical, 32)
             .padding(.horizontal, 24)
-            .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 24, style: .continuous))
+            .frame(maxWidth: .infinity)
+            .background(Color(red: 0.10, green: 0.12, blue: 0.22), in: RoundedRectangle(cornerRadius: 24, style: .continuous))
 
         case .loaded:
             if let question = vm.currentQuestion() {
                 VStack(spacing: 20) {
+                    // Question
                     Text(question.question)
                         .font(.title3)
                         .fontWeight(.semibold)
-                        .foregroundColor(.white)
+                        .foregroundStyle(.white)
                         .multilineTextAlignment(.center)
+                        .padding(.bottom, 4)
 
                     let answers = question.answersShuffled
 
-                    VStack(spacing: 12) {
+                    VStack(spacing: 10) {
                         ForEach(answers, id: \.self) { answer in
                             let isSelected = vm.selectedAnswer == answer
                             let isCorrect = vm.revealedCorrectAnswer == answer
@@ -159,15 +145,31 @@ struct QuizRushView: View {
                                     withAnimation(.easeOut(duration: 0.3).delay(0.3)) { shake = 0 }
                                 }
                             } label: {
-                                Text(answer)
-                                    .fontWeight(.semibold)
-                                    .foregroundColor(.white)
-                                    .frame(maxWidth: .infinity)
-                                    .padding()
-                                    .background(
-                                        RoundedRectangle(cornerRadius: 14)
-                                            .fill(answerBackgroundColor(isSelected: isSelected, isCorrect: isCorrect))
-                                    )
+                                HStack {
+                                    Text(answer)
+                                        .fontWeight(.semibold)
+                                        .foregroundStyle(answerForegroundColor(isSelected: isSelected, isCorrect: isCorrect))
+                                        .multilineTextAlignment(.leading)
+                                    Spacer()
+                                    if vm.isAnswerLocked {
+                                        if isCorrect {
+                                            Image(systemName: "checkmark.circle.fill")
+                                                .foregroundStyle(.green)
+                                        } else if isSelected {
+                                            Image(systemName: "xmark.circle.fill")
+                                                .foregroundStyle(.red)
+                                        }
+                                    }
+                                }
+                                .padding(.horizontal, 18)
+                                .padding(.vertical, 14)
+                                .frame(maxWidth: .infinity)
+                                .background(answerBackground(isSelected: isSelected, isCorrect: isCorrect))
+                                .clipShape(RoundedRectangle(cornerRadius: 14))
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 14)
+                                        .stroke(answerBorderColor(isSelected: isSelected, isCorrect: isCorrect), lineWidth: 1.5)
+                                )
                             }
                             .disabled(vm.isAnswerLocked)
                             .offset(x: isWrongSelection ? shake : 0)
@@ -176,51 +178,81 @@ struct QuizRushView: View {
                 }
                 .padding(.vertical, 24)
                 .padding(.horizontal, 20)
-                .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 28, style: .continuous))
+                .background(Color(red: 0.10, green: 0.12, blue: 0.22), in: RoundedRectangle(cornerRadius: 28, style: .continuous))
                 .overlay(
                     RoundedRectangle(cornerRadius: 28, style: .continuous)
-                        .stroke(.white.opacity(0.12), lineWidth: 1)
+                        .stroke(.white.opacity(0.15), lineWidth: 1)
                 )
             }
 
         case .finished:
-            VStack(spacing: 18) {
+            VStack(spacing: 16) {
+                Image(systemName: "trophy.fill")
+                    .font(.system(size: 48))
+                    .foregroundStyle(
+                        LinearGradient(colors: [.yellow, .orange], startPoint: .top, endPoint: .bottom)
+                    )
+                    .shadow(color: .orange.opacity(0.5), radius: 10)
+
                 Text("Quiz Finished!")
-                    .font(.largeTitle)
-                    .fontWeight(.bold)
-                    .foregroundColor(.white)
-                Text("Summary")
-                    .font(.headline)
-                    .foregroundColor(.white.opacity(0.85))
+                    .font(.largeTitle.bold())
+                    .foregroundStyle(.white)
+
                 Text(vm.summaryText)
-                    .font(.system(size: 44, weight: .heavy, design: .rounded))
-                    .foregroundColor(.yellow)
+                    .font(.system(size: 48, weight: .heavy, design: .rounded))
+                    .foregroundStyle(
+                        LinearGradient(colors: [.yellow, .orange], startPoint: .top, endPoint: .bottom)
+                    )
+
                 Text("Score: \(vm.score)")
                     .font(.headline)
-                    .foregroundColor(.white)
+                    .foregroundStyle(.white.opacity(0.85))
+
                 Button("Play Again") {
                     Task { await vm.load() }
                 }
                 .buttonStyle(.borderedProminent)
+                .tint(.orange)
             }
-            .padding(.vertical, 28)
+            .padding(.vertical, 36)
             .padding(.horizontal, 24)
-            .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 24, style: .continuous))
+            .frame(maxWidth: .infinity)
+            .background(Color(red: 0.10, green: 0.12, blue: 0.22), in: RoundedRectangle(cornerRadius: 24, style: .continuous))
         }
     }
 
-    private func answerBackgroundColor(isSelected: Bool, isCorrect: Bool) -> Color {
+    // Answer button helpers — dark backgrounds so text always readable
+
+    @ViewBuilder
+    private func answerBackground(isSelected: Bool, isCorrect: Bool) -> some View {
         if vm.isAnswerLocked {
             if isCorrect {
-                return Color.green.opacity(0.9)
+                Color.green.opacity(0.25)
+            } else if isSelected {
+                Color.red.opacity(0.25)
+            } else {
+                Color.white.opacity(0.06)
             }
-
-            if isSelected {
-                return Color.red.opacity(0.9)
-            }
+        } else {
+            Color.white.opacity(0.08)
         }
+    }
 
-        return Color.orange.opacity(0.88)
+    private func answerForegroundColor(isSelected: Bool, isCorrect: Bool) -> Color {
+        if vm.isAnswerLocked {
+            if isCorrect { return .green }
+            if isSelected { return .red }
+        }
+        return .white
+    }
+
+    private func answerBorderColor(isSelected: Bool, isCorrect: Bool) -> Color {
+        if vm.isAnswerLocked {
+            if isCorrect { return .green.opacity(0.7) }
+            if isSelected { return .red.opacity(0.6) }
+            return .white.opacity(0.08)
+        }
+        return isSelected ? Color.orange.opacity(0.7) : Color.white.opacity(0.1)
     }
 }
 

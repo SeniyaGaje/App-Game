@@ -2,7 +2,8 @@
 //  LightLevel.swift
 //  App Game
 //
-//  Level definitions and helpers for Light It Up mode.
+//  Level definitions for Light It Up.
+//  All levels play out inside a single round — difficulty ramps by elapsed time.
 //
 
 import SwiftUI
@@ -13,13 +14,13 @@ enum LightLevel: Int, CaseIterable {
     case level3 = 3
     case level4 = 4
 
-    // Returns the number of cards for the level
+    // Number of cards on the grid
     var cardCount: Int {
         switch self {
-        case .level1: return 3       // 1 row of 3
-        case .level2: return 4       // 1 row of 4
-        case .level3: return 6       // 2 x 3
-        case .level4: return 9       // 3 x 3
+        case .level1: return 3   // 1 row of 3
+        case .level2: return 4   // 1 row of 4
+        case .level3: return 6   // 2 × 3
+        case .level4: return 9   // 3 × 3
         }
     }
 
@@ -27,7 +28,7 @@ enum LightLevel: Int, CaseIterable {
     var litCount: Int {
         switch self {
         case .level1, .level2, .level3: return 1
-        case .level4: return 2
+        case .level4:                   return 2
         }
     }
 
@@ -41,13 +42,13 @@ enum LightLevel: Int, CaseIterable {
         }
     }
 
-    // Glow color for the level
+    // Distinct glow colour per level (matches spec image)
     var glowColor: Color {
         switch self {
         case .level1: return .green
-        case .level2: return .blue
-        case .level3: return .yellow
-        case .level4: return .red
+        case .level2: return Color(red: 0.40, green: 0.70, blue: 1.0)   // blue
+        case .level3: return Color(red: 0.85, green: 0.68, blue: 0.22)  // gold/yellow
+        case .level4: return Color(red: 0.95, green: 0.32, blue: 0.32)  // red
         }
     }
 
@@ -56,8 +57,19 @@ enum LightLevel: Int, CaseIterable {
         switch self {
         case .level1: return Array(repeating: GridItem(.flexible(), spacing: 12), count: 3)
         case .level2: return Array(repeating: GridItem(.flexible(), spacing: 12), count: 4)
-        case .level3: return Array(repeating: GridItem(.flexible(), spacing: 12), count: 3) // 2x3 achieved by cardCount
-        case .level4: return Array(repeating: GridItem(.flexible(), spacing: 12), count: 3)
+        case .level3: return Array(repeating: GridItem(.flexible(), spacing: 12), count: 3) // 2 rows × 3
+        case .level4: return Array(repeating: GridItem(.flexible(), spacing: 12), count: 3) // 3 rows × 3
+        }
+    }
+
+    // Derive the correct level from elapsed seconds
+    static func level(forElapsed elapsed: Int, totalDuration: Int = 60) -> LightLevel {
+        let block = max(1, totalDuration / 4)
+        switch elapsed {
+        case 0..<block:       return .level1
+        case block..<(2 * block): return .level2
+        case (2 * block)..<(3 * block): return .level3
+        default:              return .level4
         }
     }
 }
