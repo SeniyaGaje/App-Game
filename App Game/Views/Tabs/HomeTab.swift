@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-struct HomeView: View {
+struct HomeTab: View {
     @AppStorage("tapFrenzyHighScore") private var tapFrenzyHighScore: Int = 0
     @AppStorage("lightItUpHighScore") private var lightItUpHighScore: Int = 0
 
@@ -248,5 +248,5 @@ private struct AnimatedStars: View {
 }
 
 #Preview {
-    HomeView()
+    HomeTab()
 }
