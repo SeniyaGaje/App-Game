@@ -13,4 +13,9 @@ struct GameSession: Identifiable, Codable {
     var coordinate: CLLocationCoordinate2D {
         CLLocationCoordinate2D(latitude: latitude, longitude: longitude)
     }
+    
+    /// True only when a real GPS fix was captured (not the 0.0/0.0 sentinel)
+    var hasValidLocation: Bool {
+        latitude != 0.0 && longitude != 0.0
+    }
 }

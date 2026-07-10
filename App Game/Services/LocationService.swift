@@ -33,4 +33,13 @@ class LocationService: NSObject, ObservableObject, CLLocationManagerDelegate {
             self.currentLocation = location.coordinate
         }
     }
+    
+    func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
+        switch manager.authorizationStatus {
+        case .authorizedWhenInUse, .authorizedAlways:
+            manager.startUpdatingLocation()
+        default:
+            break
+        }
+    }
 }

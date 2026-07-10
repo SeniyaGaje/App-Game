@@ -10,9 +10,13 @@ import SwiftUI
 struct HomeTab: View {
     @AppStorage("tapFrenzyHighScore") private var tapFrenzyHighScore: Int = 0
     @AppStorage("lightItUpHighScore") private var lightItUpHighScore: Int = 0
+    @AppStorage("playerAvatar") private var playerAvatar: String = "person.crop.circle.fill"
+    
+    @Binding var path: NavigationPath
+    @State private var showProfile = false
 
     var body: some View {
-        NavigationStack {
+        NavigationStack(path: $path) {
             ZStack {
                 Color(red: 0.04, green: 0.04, blue: 0.08)
                     .ignoresSafeArea()
@@ -104,9 +108,39 @@ struct HomeTab: View {
                     .padding(.top, 20)
                     .padding(.bottom, 32)
                 }
+                
+                // Profile Button Overlay
+                VStack {
+                    HStack {
+                        Spacer()
+                        Button {
+                            showProfile = true
+                        } label: {
+                            Image(systemName: playerAvatar)
+                                .font(.system(size: 24))
+                                .foregroundStyle(.white)
+                                .padding(12)
+                                .background(.black.opacity(0.4), in: Circle())
+                                .overlay(Circle().stroke(.white.opacity(0.2), lineWidth: 1))
+                        }
+                        .padding(.top, 16)
+                        .padding(.trailing, 20)
+                    }
+                    Spacer()
+                }
             }
             .toolbar(.hidden, for: .navigationBar)
             .preferredColorScheme(.dark)
+            .fullScreenCover(isPresented: $showProfile) {
+                ProfileView()
+            }
+            .navigationDestination(for: HomeDestination.self) { destination in
+                switch destination {
+                case .tapFrenzy: TapFrenzyView()
+                case .lightItUp: LightItUpView()
+                case .quizRush:  QuizRushView()
+                }
+            }
         }
     }
 }
@@ -211,10 +245,10 @@ struct SettingsView: View {
                 Form {
                     Section("Round Length") {
                         Picker("Round Length", selection: $roundLength) {
+                            Text("15 s").tag(15)
                             Text("30 s").tag(30)
                             Text("40 s").tag(40)
                             Text("60 s").tag(60)
-                            Text("90 s").tag(90)
                         }
                         .pickerStyle(.segmented)
                         .tint(.indigo)
@@ -259,5 +293,5 @@ private struct AnimatedStars: View {
 }
 
 #Preview {
-    HomeTab()
+    HomeTab(path: .constant(NavigationPath()))
 }

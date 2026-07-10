@@ -13,6 +13,14 @@ struct StatsTab: View {
         }
     }
     
+    private var modeIcon: String {
+        switch selectedMode {
+        case .tapFrenzy: return "bolt.fill"
+        case .lightItUp: return "lightbulb.max.fill"
+        case .quizRush: return "questionmark.circle.fill"
+        }
+    }
+    
     var body: some View {
         NavigationStack {
             ZStack {
@@ -49,17 +57,46 @@ struct StatsTab: View {
                         let sortedSessions = filtered.sorted { $0.score > $1.score }
                         
                         VStack(alignment: .leading, spacing: 12) {
-                            Text("Leaderboard")
-                                .font(.title3.bold())
-                                .foregroundStyle(.white)
+                            HStack {
+                                Image(systemName: "trophy.fill")
+                                    .foregroundStyle(.yellow)
+                                Text("Leaderboard")
+                                    .font(.title3.bold())
+                                    .foregroundStyle(.white)
+                            }
+                            .padding(.horizontal)
+                            
+                            if sortedSessions.isEmpty {
+                                HStack {
+                                    Spacer()
+                                    VStack(spacing: 10) {
+                                        Image(systemName: modeIcon)
+                                            .font(.system(size: 36))
+                                            .foregroundStyle(themeColor.opacity(0.4))
+                                        Text("Play \(selectedMode.rawValue) to see your scores here!")
+                                            .font(.subheadline)
+                                            .foregroundStyle(.white.opacity(0.5))
+                                            .multilineTextAlignment(.center)
+                                    }
+                                    .padding(.vertical, 30)
+                                    Spacer()
+                                }
+                                .padding()
+                                .background(.black.opacity(0.35), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
                                 .padding(.horizontal)
+                            }
                             
                             ForEach(Array(sortedSessions.prefix(10).enumerated()), id: \.element.id) { index, session in
                                 HStack(spacing: 16) {
-                                    Text("#\(index + 1)")
-                                        .font(.headline.bold())
-                                        .foregroundStyle(index == 0 ? .yellow : .white.opacity(0.5))
-                                        .frame(width: 32, alignment: .leading)
+                                    // Rank badge
+                                    ZStack {
+                                        Circle()
+                                            .fill(rankColor(index).opacity(0.2))
+                                            .frame(width: 36, height: 36)
+                                        Text("\(index + 1)")
+                                            .font(.headline.bold())
+                                            .foregroundStyle(rankColor(index))
+                                    }
                                     
                                     VStack(alignment: .leading, spacing: 4) {
                                         Text(session.playerName)
@@ -67,7 +104,7 @@ struct StatsTab: View {
                                             .foregroundStyle(.white)
                                         Text(session.timestamp.formatted(date: .abbreviated, time: .shortened))
                                             .font(.caption)
-                                            .foregroundStyle(.white.opacity(0.6))
+                                            .foregroundStyle(.white.opacity(0.5))
                                     }
                                     Spacer()
                                     Text("\(session.score)")
@@ -83,37 +120,75 @@ struct StatsTab: View {
                                 )
                                 .padding(.horizontal)
                             }
-                            
-                            if sortedSessions.isEmpty {
-                                Text("No games played yet.")
-                                    .foregroundStyle(.white.opacity(0.5))
-                                    .padding(.horizontal)
-                            }
                         }
                         
                         if !filtered.isEmpty {
                             // Summary
+                            let totalScore = filtered.reduce(0) { $0 + $1.score }
+                            let avgScore = totalScore / max(1, filtered.count)
+                            
                             HStack(spacing: 12) {
-                                StatBlock(title: "Games Played", value: "\(filtered.count)")
-                                StatBlock(title: "Best Score", value: "\(vm.bestScore(for: selectedMode))")
+                                StatBlock(title: "Games", value: "\(filtered.count)")
+                                StatBlock(title: "Best", value: "\(vm.bestScore(for: selectedMode))")
+                                StatBlock(title: "Average", value: "\(avgScore)")
                             }
                             .padding(.horizontal)
                             
-                            // Chart
+                            // Chart — numbered games on x-axis so every session is visible
+                            let recentGames = Array(filtered.prefix(15).reversed())
+                            let chartData: [(index: Int, score: Int)] = recentGames.enumerated().map { (index: $0.offset + 1, score: $0.element.score) }
+                            
                             VStack(alignment: .leading, spacing: 16) {
-                                Text("Recent Performance")
-                                    .font(.title3.bold())
-                                    .foregroundStyle(.white)
-                                
-                                Chart(filtered.prefix(15).reversed()) { session in
-                                    BarMark(
-                                        x: .value("Session", session.timestamp, unit: .minute),
-                                        y: .value("Score", session.score)
-                                    )
-                                    .foregroundStyle(themeColor.gradient)
-                                    .cornerRadius(4)
+                                HStack {
+                                    Image(systemName: "chart.bar.fill")
+                                        .foregroundStyle(themeColor)
+                                    Text("Score Progression")
+                                        .font(.title3.bold())
+                                        .foregroundStyle(.white)
+                                    Spacer()
+                                    Text("Last \(chartData.count) games")
+                                        .font(.caption)
+                                        .foregroundStyle(.white.opacity(0.5))
                                 }
-                                .frame(height: 180)
+                                
+                                Chart {
+                                    ForEach(chartData, id: \.index) { item in
+                                        BarMark(
+                                            x: .value("Game", "G\(item.index)"),
+                                            y: .value("Score", item.score)
+                                        )
+                                        .foregroundStyle(themeColor.gradient)
+                                        .cornerRadius(6)
+                                    }
+                                    
+                                    // Average line
+                                    RuleMark(y: .value("Average", avgScore))
+                                        .foregroundStyle(.white.opacity(0.5))
+                                        .lineStyle(StrokeStyle(lineWidth: 1, dash: [5, 3]))
+                                        .annotation(position: .top, alignment: .trailing) {
+                                            Text("Avg: \(avgScore)")
+                                                .font(.caption2.bold())
+                                                .foregroundStyle(.white.opacity(0.7))
+                                                .padding(.horizontal, 6)
+                                                .padding(.vertical, 2)
+                                                .background(.black.opacity(0.5), in: Capsule())
+                                        }
+                                }
+                                .chartYAxis {
+                                    AxisMarks(position: .leading) { value in
+                                        AxisValueLabel()
+                                            .foregroundStyle(.white.opacity(0.6))
+                                        AxisGridLine()
+                                            .foregroundStyle(.white.opacity(0.1))
+                                    }
+                                }
+                                .chartXAxis {
+                                    AxisMarks { value in
+                                        AxisValueLabel()
+                                            .foregroundStyle(.white.opacity(0.6))
+                                    }
+                                }
+                                .frame(height: 200)
                             }
                             .padding(20)
                             .background(.black.opacity(0.35), in: RoundedRectangle(cornerRadius: 24, style: .continuous))
@@ -126,6 +201,15 @@ struct StatsTab: View {
             }
             .navigationTitle("Statistics")
             .preferredColorScheme(.dark)
+        }
+    }
+    
+    private func rankColor(_ index: Int) -> Color {
+        switch index {
+        case 0: return .yellow
+        case 1: return Color(white: 0.75)
+        case 2: return Color(red: 0.80, green: 0.50, blue: 0.20)
+        default: return .white.opacity(0.5)
         }
     }
 }

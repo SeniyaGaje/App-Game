@@ -18,6 +18,14 @@ struct TapFrenzyView: View {
     @State private var timer: Timer?
     @State private var showSettings: Bool = false
     @State private var tapScale: CGFloat = 1.0
+    @State private var targetOffset: CGSize = .zero
+    
+    // The button shrinks as your score goes up, down to a minimum of 20% original size
+    private var dynamicScale: CGFloat {
+        if !isPlaying { return 1.0 }
+        let scale = 1.0 - (CGFloat(score) * 0.02)
+        return max(0.2, scale)
+    }
 
     var body: some View {
         ZStack {
@@ -45,7 +53,7 @@ struct TapFrenzyView: View {
                 .offset(x: -140, y: 300)
 
             ScrollView(showsIndicators: false) {
-                VStack(spacing: 20) {
+                VStack(spacing: 12) {
 
                     // MARK: Header
                     VStack(alignment: .leading, spacing: 8) {
@@ -57,8 +65,8 @@ struct TapFrenzyView: View {
                             .foregroundStyle(.white.opacity(0.78))
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(20)
-                    .background(.black.opacity(0.35), in: RoundedRectangle(cornerRadius: 28, style: .continuous))
+                    .padding(14)
+                    .background(.black.opacity(0.35), in: RoundedRectangle(cornerRadius: 24, style: .continuous))
                     .overlay(
                         RoundedRectangle(cornerRadius: 28, style: .continuous)
                             .stroke(.white.opacity(0.15), lineWidth: 1)
@@ -66,13 +74,13 @@ struct TapFrenzyView: View {
 
                     // MARK: Stats
                     LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
-                        StatBlock(title: "Score", value: "\(score)")
-                        StatBlock(title: "Best", value: "\(highScore)")
-                        StatBlock(title: "Time", value: "\(timeLeft)s", isWarning: isPlaying && timeLeft <= 5)
+                        StatBlock(title: "Score", value: "\(score)", compact: true)
+                        StatBlock(title: "Best", value: "\(highScore)", compact: true)
+                        StatBlock(title: "Time", value: "\(timeLeft)s", isWarning: isPlaying && timeLeft <= 5, compact: true)
                     }
 
                     // MARK: Tap Circle
-                    VStack(spacing: 20) {
+                    VStack(spacing: 16) {
                         Button(action: handleTap) {
                             ZStack {
                                 // Outer glow ring
@@ -104,18 +112,31 @@ struct TapFrenzyView: View {
                                     .shadow(color: isPlaying ? Color.green.opacity(0.55) : Color.black.opacity(0.45), radius: isPlaying ? 28 : 16, x: 0, y: 12)
 
                                 VStack(spacing: 6) {
-                                    Text(isPlaying ? "TAP" : "START")
-                                        .font(.system(size: 44, weight: .heavy, design: .rounded))
-                                        .foregroundStyle(isPlaying ? .white : Color.green)
-                                    Text(isPlaying ? "Every tap counts" : "Begin a fast round")
-                                        .font(.caption.weight(.semibold))
-                                        .foregroundStyle(isPlaying ? .white.opacity(0.85) : Color.white.opacity(0.55))
+                                    if isPlaying {
+                                        Text("TAP")
+                                            .font(.system(size: 44, weight: .heavy, design: .rounded))
+                                            .foregroundStyle(.white)
+                                        Text("Every tap counts")
+                                            .font(.caption.weight(.semibold))
+                                            .foregroundStyle(.white.opacity(0.85))
+                                    } else {
+                                        Text("START")
+                                            .font(.system(size: 44, weight: .heavy, design: .rounded))
+                                            .foregroundStyle(Color.green)
+                                        Text("Begin a fast round")
+                                            .font(.caption.weight(.semibold))
+                                            .foregroundStyle(Color.white.opacity(0.55))
+                                    }
                                 }
+                                .id(isPlaying) // forces clear transition
                             }
-                            .scaleEffect(tapScale)
+                            .scaleEffect(tapScale * dynamicScale)
+                            .animation(.easeOut(duration: 0.2), value: dynamicScale)
+                            .offset(targetOffset)
                         }
                         .buttonStyle(.plain)
                         .disabled(isPlaying && timeLeft == 0)
+                        .frame(height: 280) // Reduced space to fit smaller screens
 
                         // MARK: Controls
                         HStack(spacing: 12) {
@@ -150,7 +171,8 @@ struct TapFrenzyView: View {
                     )
                 }
                 .padding(.horizontal, 18)
-                .padding(.vertical, 18)
+                .padding(.top, 18)
+                .padding(.bottom, 100) // Extra padding to clear the Tab Bar
             }
         }
         .navigationTitle("Tap Frenzy")
@@ -182,6 +204,21 @@ struct TapFrenzyView: View {
             resetGame(start: true)
         } else if timeLeft > 0 {
             score += 1
+            
+            // Randomize position to make it harder, but keep it strictly inside the modal
+            withAnimation(.interpolatingSpring(stiffness: 100, damping: 10)) {
+                // The modal inner width is roughly 300 points. 
+                // As the button shrinks, it has more safe room to move.
+                let currentSize = 266.0 * dynamicScale
+                let maxSafeOffset = max(0, (300.0 - currentSize) / 2.0 - 15.0)
+                let range = min(maxSafeOffset, 80.0) // cap maximum jump
+                
+                targetOffset = CGSize(
+                    width: CGFloat.random(in: -range...range),
+                    height: CGFloat.random(in: -range...range)
+                )
+            }
+            
             // Micro-animation on tap
             withAnimation(.spring(response: 0.15, dampingFraction: 0.5)) {
                 tapScale = 0.93
@@ -195,6 +232,9 @@ struct TapFrenzyView: View {
     private func resetGame(start: Bool) {
         score = 0
         timeLeft = roundLength
+        withAnimation(.spring()) {
+            targetOffset = .zero
+        }
         if start {
             isPlaying = true
             startTimer()
@@ -213,6 +253,9 @@ struct TapFrenzyView: View {
             if timeLeft == 0 {
                 isPlaying = false
                 stopTimer()
+                withAnimation(.spring()) {
+                    targetOffset = .zero
+                }
                 if score > highScore { highScore = score }
                 StatsVM.shared.addSession(mode: .tapFrenzy, score: score, playerName: playerName)
             }

@@ -14,10 +14,11 @@ class StatsVM: ObservableObject {
     }
     
     func addSession(mode: GameMode, score: Int, playerName: String) {
-        // Get current location from service, or fallback to Sri Lanka default (lat: 6.9271, lon: 79.8612) if nil
+        // Use real GPS coordinates only. 0.0/0.0 means "no location recorded yet".
+        // This will be non-zero once the user grants location permission.
         let loc = LocationService.shared.currentLocation
-        let lat = loc?.latitude ?? 6.9271
-        let lon = loc?.longitude ?? 79.8612
+        let lat = loc?.latitude ?? 0.0
+        let lon = loc?.longitude ?? 0.0
         
         let newSession = GameSession(
             id: UUID(),
