@@ -14,8 +14,11 @@ class StatsVM: ObservableObject {
     }
     
     func addSession(mode: GameMode, score: Int, playerName: String) {
-        // Use real GPS coordinates only. 0.0/0.0 means "no location recorded yet".
-        // This will be non-zero once the user grants location permission.
+        // Request a fresh location fix in case the GPS went idle
+        LocationService.shared.requestOnce()
+        
+        // Use real GPS coordinates. Falls back to persisted last-known location.
+        // 0.0/0.0 means "no location ever recorded".
         let loc = LocationService.shared.currentLocation
         let lat = loc?.latitude ?? 0.0
         let lon = loc?.longitude ?? 0.0

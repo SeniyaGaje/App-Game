@@ -11,6 +11,9 @@ struct OpenTriviaQuestion: Codable, Identifiable, Equatable {
     let question: String
     let correctAnswer: String
     let incorrectAnswers: [String]
+    
+    /// Shuffled once at init time so the order stays stable across re-renders.
+    let answersShuffled: [String]
 
     private enum CodingKeys: String, CodingKey {
         case question
@@ -26,19 +29,14 @@ struct OpenTriviaQuestion: Codable, Identifiable, Equatable {
         self.question = rawQ.decodingHTMLEntities()
         self.correctAnswer = rawCorrect.decodingHTMLEntities()
         self.incorrectAnswers = rawIncorrect.map { $0.decodingHTMLEntities() }
+        self.answersShuffled = (self.incorrectAnswers + [self.correctAnswer]).shuffled()
     }
 
     init(question: String, correctAnswer: String, incorrectAnswers: [String]) {
         self.question = question
         self.correctAnswer = correctAnswer
         self.incorrectAnswers = incorrectAnswers
-    }
-
-    /// A shuffled array of all answers (correct + incorrect).
-    var answersShuffled: [String] {
-        var all = incorrectAnswers + [correctAnswer]
-        all.shuffle()
-        return all
+        self.answersShuffled = (incorrectAnswers + [correctAnswer]).shuffled()
     }
 
     /// Convenience function to get shuffled answers.
