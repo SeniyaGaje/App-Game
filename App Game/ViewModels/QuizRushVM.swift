@@ -58,7 +58,6 @@ final class QuizRushViewModel: ObservableObject {
         self.service = service
     }
     
-    /// Load questions asynchronously, resetting state and score metrics.
     func load(amount: Int = 10) async {
         state = .loading
         score = 0
@@ -82,13 +81,11 @@ final class QuizRushViewModel: ObservableObject {
         }
     }
     
-    /// Returns the current question if within bounds.
     func currentQuestion() -> OpenTriviaQuestion? {
         guard currentIndex >= 0, currentIndex < questions.count else { return nil }
         return questions[currentIndex]
     }
     
-    /// Process an answer string, update score, streak and state accordingly.
     func answer(_ answer: String) {
         guard !isAnswerLocked else { return }
         guard let current = currentQuestion() else { return }
@@ -131,7 +128,6 @@ final class QuizRushViewModel: ObservableObject {
         }
     }
     
-    /// Retry the quiz by reloading questions.
     func retry() async {
         await load()
     }
@@ -140,7 +136,6 @@ final class QuizRushViewModel: ObservableObject {
         state = .setup
     }
     
-    /// Progress text in the format "currentIndex of totalQuestions"
     var progressText: String {
         "\(min(currentIndex + 1, questions.count)) of \(questions.count)"
     }

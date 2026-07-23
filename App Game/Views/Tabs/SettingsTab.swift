@@ -71,7 +71,7 @@ struct SettingsTab: View {
                     }
                     .listRowBackground(Color.white.opacity(0.08))
                     
-                    // MARK: Data Management
+                    // Data Management
                     Section("Data Management") {
                         Button("Reset All Stats", role: .destructive) {
                             showResetDialog = true
@@ -98,7 +98,7 @@ struct SettingsTab: View {
         NotificationService.shared.scheduleDailyChallenge(
             at: dailyChallengeTime.wrappedValue,
             isEnabled: notificationsEnabled,
-            game: selectedGame  // nil = random
+            game: selectedGame  
         )
     }
     

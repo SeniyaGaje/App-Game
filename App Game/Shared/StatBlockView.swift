@@ -1,9 +1,4 @@
-//
-//  StatBlockView.swift
-//  App Game
-//
 //  Shared stat display used across game modes.
-//
 
 import SwiftUI
 

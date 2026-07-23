@@ -1,18 +1,15 @@
 import Foundation
 
-/// Top-level response from Open Trivia DB.
 struct OpenTriviaResponse: Codable {
     let results: [OpenTriviaQuestion]
 }
 
-/// A single multiple-choice trivia question from Open Trivia DB.
 struct OpenTriviaQuestion: Codable, Identifiable, Equatable {
     let id = UUID()
     let question: String
     let correctAnswer: String
     let incorrectAnswers: [String]
     
-    /// Shuffled once at init time so the order stays stable across re-renders.
     let answersShuffled: [String]
 
     private enum CodingKeys: String, CodingKey {
@@ -39,19 +36,16 @@ struct OpenTriviaQuestion: Codable, Identifiable, Equatable {
         self.answersShuffled = (incorrectAnswers + [correctAnswer]).shuffled()
     }
 
-    /// Convenience function to get shuffled answers.
     func allAnswersShuffled() -> [String] { answersShuffled }
 
-    /// Compatibility helper for older view code expecting decodedQuestion()
     func decodedQuestion() -> String { question }
 
-    /// Compatibility helper for older view code expecting decodedAnswers()
     func decodedAnswers() -> [String] { answersShuffled }
 }
 
 // Simple HTML entity decoding without UIKit/AppKit.
 extension String {
-    /// Decodes a small set of common HTML entities found in OpenTDB strings.
+    
     func decodingHTMLEntities() -> String {
         var result = self
 

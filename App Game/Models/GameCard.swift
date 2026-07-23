@@ -1,6 +1,5 @@
 //  Model for Light It Up mode.
 
-
 import Foundation
 
 struct GameCard: Identifiable, Hashable {

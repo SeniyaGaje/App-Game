@@ -1,10 +1,3 @@
-//
-//  HomeView.swift
-//  App Game
-//
-//  Home screen with navigation to game modes and high score display.
-//
-
 import SwiftUI
 
 struct HomeTab: View {
@@ -84,7 +77,7 @@ struct HomeTab: View {
                         .padding(.top, 16)
                         .padding(.bottom, 8)
 
-                        // MARK: Game Cards
+                        // Game Cards
                         VStack(spacing: 14) {
                             NavigationLink {
                                 TapFrenzyView()

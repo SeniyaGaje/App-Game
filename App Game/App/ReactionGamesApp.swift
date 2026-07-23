@@ -1,9 +1,4 @@
-//
-//  ReactionGamesApp.swift
 //  App Game
-//
-//  NOTE: This file was neutralized to avoid duplicate @main. The app's entry point is App_GameApp in App_GameApp.swift.
-//
 
 import SwiftUI
 

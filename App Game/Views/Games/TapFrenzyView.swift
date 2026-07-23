@@ -1,10 +1,3 @@
-//
-//  TapFrenzyView.swift
-//  App Game
-//
-//  Simple tap-as-fast-as-you-can mode.
-//
-
 import SwiftUI
 
 struct TapFrenzyView: View {
@@ -72,14 +65,14 @@ struct TapFrenzyView: View {
                             .stroke(.white.opacity(0.15), lineWidth: 1)
                     )
 
-                    // MARK: Stats
+                    // Stats
                     LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
                         StatBlock(title: "Score", value: "\(score)", compact: true)
                         StatBlock(title: "Best", value: "\(highScore)", compact: true)
                         StatBlock(title: "Time", value: "\(timeLeft)s", isWarning: isPlaying && timeLeft <= 5, compact: true)
                     }
 
-                    // MARK: Tap Circle
+                    // Tap Circle
                     VStack(spacing: 16) {
                         Button(action: handleTap) {
                             ZStack {
@@ -208,10 +201,9 @@ struct TapFrenzyView: View {
             // Randomize position to make it harder, but keep it strictly inside the modal
             withAnimation(.interpolatingSpring(stiffness: 100, damping: 10)) {
                 // The modal inner width is roughly 300 points. 
-                // As the button shrinks, it has more safe room to move.
                 let currentSize = 266.0 * dynamicScale
                 let maxSafeOffset = max(0, (300.0 - currentSize) / 2.0 - 15.0)
-                let range = min(maxSafeOffset, 80.0) // cap maximum jump
+                let range = min(maxSafeOffset, 80.0)
                 
                 targetOffset = CGSize(
                     width: CGFloat.random(in: -range...range),

@@ -1,15 +1,8 @@
-//
-//  LightItUpView.swift
-//  App Game
-//
-//  Week 2 mode: cards light up; tap them before they go dark.
-//
 //  Timer system:
 //  - One continuous 40-second round (10s per level).
 //  - Level progresses automatically based on elapsed time.
 //  - 4 lives — missed card costs a life. 0 lives = Game Over.
 //  - Surviving the full 40 seconds = Round Complete.
-//
 
 import SwiftUI
 
@@ -30,8 +23,7 @@ struct LightItUpView: View {
 
     @State private var roundTimer: Timer?
 
-    /// Incremented every time the game resets, level changes, or a tile is tapped.
-    /// Used to invalidate stale DispatchQueue.main.asyncAfter callbacks.
+
     @State private var tickGeneration: Int = 0
 
     @State private var showLevelFlash: Bool = false
@@ -88,7 +80,7 @@ struct LightItUpView: View {
                             .stroke(level.glowColor.opacity(0.3), lineWidth: 1)
                     )
 
-                    // MARK: Stats row (compact, 4 columns)
+                    // Stats row (compact, 4 columns)
                     LazyVGrid(
                         columns: Array(repeating: GridItem(.flexible(), spacing: 8), count: 4),
                         spacing: 8
@@ -100,17 +92,17 @@ struct LightItUpView: View {
                                   isWarning: isPlaying && timeLeft <= 10, compact: true)
                     }
 
-                    // MARK: Lives
+                    // Lives
                     livesRow
 
-                    // MARK: Level progress bar
+                    // Level progress bar
                     if isPlaying {
                         levelProgressBar
                     }
 
-                    // MARK: Game Grid + Controls
+                    // Game Grid and Controls
                     VStack(spacing: 16) {
-                        // The grid — uses indices to guarantee rendering all slots
+                        // The grid uses indices to guarantee rendering all slots
                         LazyVGrid(columns: level.gridColumns, spacing: 10) {
                             ForEach(cards.indices, id: \.self) { index in
                                 InstantTileControl(
@@ -185,12 +177,12 @@ struct LightItUpView: View {
                 .zIndex(100)
             }
 
-            // MARK: Game Over overlay
+            // Game Over overlay
             if isGameOver {
                 gameOverOverlay
             }
 
-            // MARK: Round Complete overlay
+            // Round Complete overlay
             if isRoundComplete {
                 roundCompleteOverlay
             }
@@ -210,7 +202,7 @@ struct LightItUpView: View {
         .preferredColorScheme(.dark)
     }
 
-    // MARK: - Computed Helpers
+    // Computed Helpers
 
     private var headerSubtitle: String {
         if isGameOver      { return "Game over! Tap Play Again to retry." }
@@ -225,7 +217,7 @@ struct LightItUpView: View {
         return "Start"
     }
 
-    // MARK: - Sub-views
+    // Sub-views
 
     private var livesRow: some View {
         HStack(spacing: 0) {
@@ -378,9 +370,7 @@ struct LightItUpView: View {
         .transition(.opacity.combined(with: .scale(scale: 0.92)))
     }
 
-    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-    // MARK: - Game Flow
-    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    //Game Flow
 
     private func resetGame(start: Bool) {
         stopAllTimers()
@@ -395,7 +385,7 @@ struct LightItUpView: View {
         if start {
             isPlaying = true
             startRoundTimer()
-            tickLights() // kick off the pure async loop!
+            tickLights() // kick off the pure async loop
         } else {
             isPlaying = false
         }
@@ -410,7 +400,7 @@ struct LightItUpView: View {
                 checkLevelProgress()
             }
             if timeLeft == 0 {
-                // Timer finished! You survived the full round.
+
                 endGame(complete: true)
             }
         }
@@ -441,11 +431,10 @@ struct LightItUpView: View {
         }
     }
 
-    // MARK: - Level Advancement
+    // Level Advancement
 
     private func advanceLevel(to nextLevel: LightLevel) {
         // Cancel the previous level's pending dim callback before rebuilding
-        // the grid, then start the next level with a lit tile immediately.
         tickGeneration += 1
         level = nextLevel
         rebuildCards()
@@ -463,21 +452,18 @@ struct LightItUpView: View {
         }
     }
 
-    // MARK: - Lighting Logic (Pure Async Loop - No Timer Race Conditions)
+    // Lighting Logic (Pure Async Loop - No Timer Race Conditions)
 
     private func tickLights() {
         guard isPlaying else { return }
 
-        // 1) Clear previous
         clearLit()
 
-        // 2) Light new cards
         let indices = randomUniqueIndices(count: level.litCount, upperBound: cards.count)
         for idx in indices {
             cards[idx].isLit = true
         }
 
-        // 3) Schedule auto-dim based on current level's window
         tickGeneration += 1
         let gen = tickGeneration
         let currentLitWindow = level.litWindow
@@ -511,7 +497,7 @@ struct LightItUpView: View {
         return Array(pool.prefix(count))
     }
 
-    // MARK: - Lives
+    // Lives
 
     private func loseLife(count: Int = 1) {
         lives = max(0, lives - count)
@@ -522,14 +508,12 @@ struct LightItUpView: View {
         }
     }
 
-    // MARK: - Input
+    // Input
 
     private func handleTap(on index: Int) {
         guard isPlaying, index < cards.count else { return }
 
         // Ignore touches on inactive tiles. Lives are only lost when a lit tile
-        // genuinely expires, so scrolling or an incidental touch cannot punish
-        // the player.
         guard cards[index].isLit else { return }
 
         score += 1
@@ -537,12 +521,12 @@ struct LightItUpView: View {
 
         // If there are no more lit cards (e.g. Level 4 has 2 lit cards), spawn the next set instantly!
         if cards.filter(\.isLit).count == 0 {
-            tickLights() // This automatically increments tickGeneration, cancelling the previous auto-dim!
+            tickLights()
         }
     }
 }
 
-// MARK: - Card View
+// Card View
 
 private struct InstantTileControl<Label: View>: View {
     let isEnabled: Bool
@@ -606,7 +590,6 @@ private struct CardView: View {
                 .shadow(color: isLit ? color.opacity(0.7) : .clear, radius: isLit ? 12 : 0)
                 .scaleEffect(isLit ? 1.06 : 1.0)
                 // Animate a tile turning on, but turn it off immediately so the
-                // visual state never lingers after the input window has closed.
                 .animation(
                     isLit ? .easeOut(duration: 0.08) : nil,
                     value: isLit

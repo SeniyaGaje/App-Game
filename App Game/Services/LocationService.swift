@@ -38,7 +38,7 @@ class LocationService: NSObject, ObservableObject, CLLocationManagerDelegate {
         manager.stopUpdatingLocation()
     }
     
-    /// Request a single fresh location fix (useful right before saving a session)
+    //Request a location fix.
     func requestOnce() {
         manager.requestLocation()
     }
@@ -57,7 +57,7 @@ class LocationService: NSObject, ObservableObject, CLLocationManagerDelegate {
     }
     
     func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
-        // Silently handle — currentLocation stays as last known
+        // Silently handle currentLocation stays as last known
         print("LocationService error: \(error.localizedDescription)")
     }
     

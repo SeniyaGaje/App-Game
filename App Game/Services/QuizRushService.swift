@@ -4,7 +4,6 @@ final class QuizRushService {
     static let shared = QuizRushService()
     private init() {}
 
-    /// Errors that can occur during network request or decoding.
     enum NetworkError: Error {
         case badURL
         case badStatus(Int)
@@ -12,10 +11,7 @@ final class QuizRushService {
         case empty
     }
 
-    /// Fetches trivia questions from Open Trivia DB.
-    /// - Parameter amount: The number of questions to fetch. Defaults to 10.
-    /// - Throws: NetworkError if URL is invalid, status code is not 200, decoding fails, or results are empty.
-    /// - Returns: An array of `OpenTriviaQuestion`.
+    // Fetch quiz from openDb api
     func fetchQuestions(amount: Int = 10, categoryId: Int? = nil, difficulty: String? = nil) async throws -> [OpenTriviaQuestion] {
         guard var components = URLComponents(string: "https://opentdb.com/api.php") else {
             throw NetworkError.badURL

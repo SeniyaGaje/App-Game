@@ -12,21 +12,16 @@ class NotificationService: NSObject {
         }
     }
     
-    /// Schedule daily challenge notification(s).
-    /// - Parameters:
-    ///   - time: The time of day to fire.
-    ///   - isEnabled: Whether to schedule or cancel.
-    ///   - game: The specific game, or nil for random (rotates each day of the week).
+    // Parameters
     func scheduleDailyChallenge(at time: Date, isEnabled: Bool, game: GameMode?) {
         UNUserNotificationCenter.current().removeAllPendingNotificationRequests()
         guard isEnabled else { return }
         
         if let game {
-            // Fixed game — one repeating daily notification
+            // Repeating daily notification
             scheduleNotification(for: game, at: time, weekday: nil)
         } else {
             // Random — schedule one notification per game on a rotating weekday pattern
-            // Mon/Thu = Tap Frenzy, Tue/Fri = Light It Up, Wed/Sat/Sun = Quiz Rush
             let assignments: [(GameMode, [Int])] = [
                 (.tapFrenzy, [2, 5]),   // Monday, Thursday
                 (.lightItUp, [3, 6]),   // Tuesday, Friday

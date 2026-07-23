@@ -1,7 +1,7 @@
 import SwiftUI
 import MapKit
 
-// MARK: - Location Cluster
+// Location Cluster
 
 /// Groups all sessions that are within ~200m of each other into one pin
 struct LocationCluster: Identifiable {
@@ -14,7 +14,7 @@ struct LocationCluster: Identifiable {
     }
 }
 
-// MARK: - MapTab
+// MapTab
 
 struct MapTab: View {
     @StateObject private var vm = StatsVM.shared
@@ -95,8 +95,7 @@ struct MapTab: View {
     }
 }
 
-// MARK: - Pin Button
-
+// Pin Button
 private struct PinButton: View {
     let cluster: LocationCluster
     let onTap: () -> Void
@@ -158,7 +157,7 @@ private struct PinButton: View {
     }
 }
 
-// MARK: - Session Popup Sheet
+// Session Popup Sheet
 
 private struct SessionPopup: View {
     let cluster: LocationCluster

@@ -18,7 +18,6 @@ class StatsVM: ObservableObject {
         LocationService.shared.requestOnce()
         
         // Use real GPS coordinates. Falls back to persisted last-known location.
-        // 0.0/0.0 means "no location ever recorded".
         let loc = LocationService.shared.currentLocation
         let lat = loc?.latitude ?? 0.0
         let lon = loc?.longitude ?? 0.0

@@ -1,10 +1,3 @@
-//
-//  App_GameApp.swift
-//  App Game
-//
-//  Created by student6 on 2026-06-27.
-//
-
 import SwiftUI
 import UserNotifications
 
@@ -29,13 +22,11 @@ struct App_GameApp: App {
     }
 }
 
-// MARK: - Notification Delegate
+// Notification
 
-/// Handles foreground display and tap responses for all UNUserNotification events.
 class NotificationDelegate: NSObject, UNUserNotificationCenterDelegate {
     static let shared = NotificationDelegate()
     
-    /// Show notification banners even while the app is in the foreground
     func userNotificationCenter(
         _ center: UNUserNotificationCenter,
         willPresent notification: UNNotification,
@@ -44,7 +35,6 @@ class NotificationDelegate: NSObject, UNUserNotificationCenterDelegate {
         completionHandler([.banner, .sound])
     }
     
-    /// Called when the user taps the notification — deep-link to the correct game
     func userNotificationCenter(
         _ center: UNUserNotificationCenter,
         didReceive response: UNNotificationResponse,
