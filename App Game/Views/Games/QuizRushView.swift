@@ -36,41 +36,39 @@ struct QuizRushView: View {
                     stateContent
                         .frame(maxWidth: .infinity)
                 }
-                .padding(.horizontal, 18)
-                .padding(.top, 10)
-                .padding(.bottom, 24)
+                .padding(.horizontal, 14)
+                .padding(.top, 6)
+                .padding(.bottom, 12)
             }
         }
         .navigationTitle("Quiz Rush")
         .navigationBarTitleDisplayMode(.inline)
         .preferredColorScheme(.dark)
-        .onAppear {
-            if case .idle = vm.state {
-                Task { await vm.load() }
-            }
-        }
     }
 
     private var header: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: 7) {
             Text("Quiz Rush")
-                .font(.system(size: 36, weight: .heavy, design: .rounded))
+                .font(.system(size: 29, weight: .heavy, design: .rounded))
                 .foregroundStyle(.white)
 
             Text("Answer quickly, keep your streak alive.")
-                .font(.headline)
+                .font(.subheadline)
                 .foregroundStyle(.white.opacity(0.78))
 
-            HStack(spacing: 12) {
-                StatBlock(title: "Progress", value: vm.progressText)
-                StatBlock(title: "Score", value: "\(vm.score)")
-                StatBlock(title: "Streak", value: "\(vm.streak)")
+            if vm.state != .setup {
+                HStack(spacing: 12) {
+                    StatBlock(title: "Progress", value: vm.progressText)
+                    StatBlock(title: "Score", value: "\(vm.score)")
+                    StatBlock(title: "Streak", value: "\(vm.streak)")
+                }
             }
         }
-        .padding(20)
-        .background(.black.opacity(0.35), in: RoundedRectangle(cornerRadius: 28, style: .continuous))
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(15)
+        .background(.black.opacity(0.35), in: RoundedRectangle(cornerRadius: 22, style: .continuous))
         .overlay(
-            RoundedRectangle(cornerRadius: 28, style: .continuous)
+            RoundedRectangle(cornerRadius: 22, style: .continuous)
                 .stroke(.white.opacity(0.15), lineWidth: 1)
         )
     }
@@ -78,7 +76,117 @@ struct QuizRushView: View {
     @ViewBuilder
     private var stateContent: some View {
         switch vm.state {
-        case .idle, .loading:
+        case .setup:
+            VStack(spacing: 11) {
+                VStack(spacing: 3) {
+                    Image(systemName: "brain.head.profile")
+                        .font(.system(size: 34))
+                        .foregroundStyle(LinearGradient(colors: [.orange, .red], startPoint: .topLeading, endPoint: .bottomTrailing))
+                        .shadow(color: .orange.opacity(0.4), radius: 5, x: 0, y: 2)
+                        
+                    Text("Ready for a Challenge?")
+                        .font(.title3.weight(.heavy))
+                        .foregroundStyle(.white)
+                    Text("Customize your next quiz session.")
+                        .font(.subheadline)
+                        .foregroundStyle(.white.opacity(0.7))
+                }
+                
+                VStack(alignment: .leading, spacing: 8) {
+                    Label("Category", systemImage: "books.vertical.fill")
+                        .font(.headline)
+                        .foregroundStyle(.white.opacity(0.9))
+                    
+                    LazyVGrid(
+                        columns: [
+                            GridItem(.flexible(), spacing: 6),
+                            GridItem(.flexible(), spacing: 6)
+                        ],
+                        spacing: 6
+                    ) {
+                        ForEach(vm.availableCategories, id: \.id) { category in
+                            let isSelected = vm.selectedCategoryId == category.id
+
+                            Button {
+                                withAnimation(.easeInOut(duration: 0.2)) {
+                                    vm.selectedCategoryId = category.id
+                                }
+                            } label: {
+                                HStack(spacing: 6) {
+                                    Text(category.name)
+                                        .font(.system(size: 14, weight: .semibold))
+                                        .multilineTextAlignment(.leading)
+                                        .lineLimit(2)
+
+                                    Spacer(minLength: 0)
+
+                                    Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
+                                        .font(.system(size: 15, weight: .semibold))
+                                }
+                                .foregroundStyle(isSelected ? Color.orange : Color.white.opacity(0.82))
+                                .padding(.horizontal, 8)
+                                .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+                                .background(
+                                    isSelected
+                                        ? Color.orange.opacity(0.22)
+                                        : Color.white.opacity(0.08)
+                                )
+                                .clipShape(RoundedRectangle(cornerRadius: 11, style: .continuous))
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 11, style: .continuous)
+                                        .stroke(
+                                            isSelected
+                                                ? Color.orange.opacity(0.85)
+                                                : Color.white.opacity(0.14),
+                                            lineWidth: isSelected ? 1.5 : 1
+                                        )
+                                )
+                            }
+                            .buttonStyle(.plain)
+                            .accessibilityAddTraits(isSelected ? .isSelected : [])
+                        }
+                    }
+                }
+                
+                VStack(alignment: .leading, spacing: 8) {
+                    Label("Difficulty", systemImage: "flame.fill")
+                        .font(.headline)
+                        .foregroundStyle(.white.opacity(0.9))
+                    
+                    Picker("Difficulty", selection: $vm.selectedDifficulty) {
+                        ForEach(vm.difficulties, id: \.self) { diff in
+                            Text(diff.capitalized).tag(diff)
+                        }
+                    }
+                    .pickerStyle(.segmented)
+                    .colorScheme(.dark)
+                }
+                
+                Button(action: {
+                    Task { await vm.load() }
+                }) {
+                    HStack(spacing: 8) {
+                        Text("Start Quiz")
+                            .font(.headline.weight(.bold))
+                        Image(systemName: "arrow.right.circle.fill")
+                            .font(.headline)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 10)
+                    .background(LinearGradient(colors: [.orange, .red], startPoint: .topLeading, endPoint: .bottomTrailing))
+                    .foregroundColor(.white)
+                    .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                    .shadow(color: .orange.opacity(0.3), radius: 8, x: 0, y: 4)
+                }
+            }
+            .padding(14)
+            .background(.black.opacity(0.4), in: RoundedRectangle(cornerRadius: 22, style: .continuous))
+            .overlay(
+                RoundedRectangle(cornerRadius: 22, style: .continuous)
+                    .stroke(.white.opacity(0.2), lineWidth: 1)
+            )
+
+        case .loading:
             VStack(spacing: 16) {
                 ProgressView()
                     .tint(.orange)
@@ -213,6 +321,12 @@ struct QuizRushView: View {
                 }
                 .buttonStyle(.borderedProminent)
                 .tint(.orange)
+                
+                Button("Change Settings") {
+                    vm.resetToSetup()
+                }
+                .buttonStyle(.bordered)
+                .tint(.white.opacity(0.8))
                 
                 ShareLink(item: "I just scored \(vm.score) on Quiz Rush — beat that!")
                     .font(.headline)

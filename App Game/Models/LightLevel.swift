@@ -1,10 +1,4 @@
-//
 //  LightLevel.swift
-//  App Game
-//
-//  Level definitions for Light It Up.
-//  All levels play out inside a single round — difficulty ramps by elapsed time.
-//
 
 import SwiftUI
 
@@ -42,12 +36,12 @@ enum LightLevel: Int, CaseIterable {
         }
     }
 
-    // Distinct glow colour per level (matches spec image)
+    // Distinct glow colour per level.
     var glowColor: Color {
         switch self {
         case .level1: return .green
         case .level2: return Color(red: 0.40, green: 0.70, blue: 1.0)   // blue
-        case .level3: return Color(red: 0.85, green: 0.68, blue: 0.22)  // gold/yellow
+        case .level3: return Color(red: 0.85, green: 0.68, blue: 0.22)  // yellow
         case .level4: return Color(red: 0.95, green: 0.32, blue: 0.32)  // red
         }
     }
@@ -57,8 +51,8 @@ enum LightLevel: Int, CaseIterable {
         switch self {
         case .level1: return Array(repeating: GridItem(.flexible(), spacing: 12), count: 3)
         case .level2: return Array(repeating: GridItem(.flexible(), spacing: 12), count: 4)
-        case .level3: return Array(repeating: GridItem(.flexible(), spacing: 12), count: 3) // 2 rows × 3
-        case .level4: return Array(repeating: GridItem(.flexible(), spacing: 12), count: 3) // 3 rows × 3
+        case .level3: return Array(repeating: GridItem(.flexible(), spacing: 12), count: 3)
+        case .level4: return Array(repeating: GridItem(.flexible(), spacing: 12), count: 3)
         }
     }
 
@@ -73,3 +67,4 @@ enum LightLevel: Int, CaseIterable {
         }
     }
 }
+ 

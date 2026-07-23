@@ -4,15 +4,15 @@ import Combine
 
 @MainActor
 final class QuizRushViewModel: ObservableObject {
-    enum ViewState {
-        case idle
+    enum ViewState: Equatable {
+        case setup
         case loading
         case loaded
         case failed(String)
         case finished
     }
     
-    @Published var state: ViewState = .idle
+    @Published var state: ViewState = .setup
     @Published private(set) var questions: [OpenTriviaQuestion] = []
     @Published private(set) var currentIndex: Int = 0
     @Published private(set) var score: Int = 0
@@ -31,6 +31,29 @@ final class QuizRushViewModel: ObservableObject {
         case incorrect
     }
     
+    struct Category: Hashable {
+        let id: Int
+        let name: String
+    }
+    
+    let availableCategories: [Category] = [
+        Category(id: 0, name: "Any Category"),
+        Category(id: 9, name: "General Knowledge"),
+        Category(id: 11, name: "Film"),
+        Category(id: 12, name: "Music"),
+        Category(id: 15, name: "Games"),
+        Category(id: 17, name: "Science & Nature"),
+        Category(id: 18, name: "Computers"),
+        Category(id: 21, name: "Sports"),
+        Category(id: 22, name: "Geography"),
+        Category(id: 23, name: "History")
+    ]
+    
+    let difficulties = ["any", "easy", "medium", "hard"]
+    
+    @Published var selectedCategoryId: Int = 0
+    @Published var selectedDifficulty: String = "any"
+    
     init(service: QuizRushService = .shared) {
         self.service = service
     }
@@ -48,7 +71,11 @@ final class QuizRushViewModel: ObservableObject {
         isAnswerLocked = false
         
         do {
-            questions = try await service.fetchQuestions(amount: amount)
+            questions = try await service.fetchQuestions(
+                amount: amount,
+                categoryId: selectedCategoryId,
+                difficulty: selectedDifficulty
+            )
             state = .loaded
         } catch {
             state = .failed(error.localizedDescription)
@@ -107,6 +134,10 @@ final class QuizRushViewModel: ObservableObject {
     /// Retry the quiz by reloading questions.
     func retry() async {
         await load()
+    }
+    
+    func resetToSetup() {
+        state = .setup
     }
     
     /// Progress text in the format "currentIndex of totalQuestions"

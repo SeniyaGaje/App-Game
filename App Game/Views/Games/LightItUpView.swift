@@ -113,8 +113,14 @@ struct LightItUpView: View {
                         // The grid — uses indices to guarantee rendering all slots
                         LazyVGrid(columns: level.gridColumns, spacing: 10) {
                             ForEach(cards.indices, id: \.self) { index in
-                                CardView(isLit: cards[index].isLit, color: level.glowColor)
-                                    .onTapGesture { handleTap(on: index) }
+                                InstantTileControl(
+                                    isEnabled: isPlaying,
+                                    accessibilityLabel: cards[index].isLit ? "Lit tile" : "Unlit tile"
+                                ) {
+                                    handleTap(on: index)
+                                } label: {
+                                    CardView(isLit: cards[index].isLit, color: level.glowColor)
+                                }
                             }
                         }
                         .padding(14)
@@ -438,10 +444,15 @@ struct LightItUpView: View {
     // MARK: - Level Advancement
 
     private func advanceLevel(to nextLevel: LightLevel) {
+        // Cancel the previous level's pending dim callback before rebuilding
+        // the grid, then start the next level with a lit tile immediately.
+        tickGeneration += 1
         level = nextLevel
         rebuildCards()
         showLevelUpFlash(for: nextLevel)
-        // Note: the existing async loop continues and naturally inherits the new litWindow on its next cycle.
+        if isPlaying {
+            tickLights()
+        }
     }
 
     private func showLevelUpFlash(for lvl: LightLevel) {
@@ -515,22 +526,63 @@ struct LightItUpView: View {
 
     private func handleTap(on index: Int) {
         guard isPlaying, index < cards.count else { return }
-        
-        if cards[index].isLit {
-            score += 1
-            cards[index].isLit = false
-            
-            // If there are no more lit cards (e.g. Level 4 has 2 lit cards), spawn the next set instantly!
-            if cards.filter(\.isLit).count == 0 {
-                tickLights() // This automatically increments tickGeneration, cancelling the previous auto-dim!
-            }
-        } else {
-            loseLife()
+
+        // Ignore touches on inactive tiles. Lives are only lost when a lit tile
+        // genuinely expires, so scrolling or an incidental touch cannot punish
+        // the player.
+        guard cards[index].isLit else { return }
+
+        score += 1
+        cards[index].isLit = false
+
+        // If there are no more lit cards (e.g. Level 4 has 2 lit cards), spawn the next set instantly!
+        if cards.filter(\.isLit).count == 0 {
+            tickLights() // This automatically increments tickGeneration, cancelling the previous auto-dim!
         }
     }
 }
 
 // MARK: - Card View
+
+private struct InstantTileControl<Label: View>: View {
+    let isEnabled: Bool
+    let accessibilityLabel: String
+    let action: () -> Void
+    @ViewBuilder let label: () -> Label
+
+    @State private var hasTriggeredForCurrentTouch = false
+    @GestureState private var isTouchActive = false
+
+    var body: some View {
+        label()
+            .contentShape(Rectangle())
+            .highPriorityGesture(
+                DragGesture(minimumDistance: 0)
+                    .updating($isTouchActive) { _, touchActive, _ in
+                        touchActive = true
+                    }
+                    .onChanged { _ in
+                        guard isEnabled, !hasTriggeredForCurrentTouch else { return }
+                        hasTriggeredForCurrentTouch = true
+                        action()
+                    }
+                    .onEnded { _ in
+                        hasTriggeredForCurrentTouch = false
+                    }
+            )
+            .onChange(of: isTouchActive) { _, touchActive in
+                if !touchActive {
+                    hasTriggeredForCurrentTouch = false
+                }
+            }
+            .accessibilityAddTraits(.isButton)
+            .accessibilityLabel(accessibilityLabel)
+            .accessibilityAction {
+                guard isEnabled else { return }
+                action()
+            }
+    }
+}
 
 private struct CardView: View {
     let isLit: Bool
@@ -553,7 +605,12 @@ private struct CardView: View {
                 )
                 .shadow(color: isLit ? color.opacity(0.7) : .clear, radius: isLit ? 12 : 0)
                 .scaleEffect(isLit ? 1.06 : 1.0)
-                .animation(.spring(response: 0.22, dampingFraction: 0.72), value: isLit)
+                // Animate a tile turning on, but turn it off immediately so the
+                // visual state never lingers after the input window has closed.
+                .animation(
+                    isLit ? .easeOut(duration: 0.08) : nil,
+                    value: isLit
+                )
 
             if isLit {
                 Image(systemName: "bolt.fill")
@@ -563,7 +620,7 @@ private struct CardView: View {
                     .transition(.scale.combined(with: .opacity))
             }
         }
-        .frame(height: 72)
+        .frame(maxWidth: .infinity, minHeight: 72)
         .contentShape(Rectangle())   // makes full card area tappable
     }
 }

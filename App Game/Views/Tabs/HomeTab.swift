@@ -11,6 +11,7 @@ struct HomeTab: View {
     @AppStorage("tapFrenzyHighScore") private var tapFrenzyHighScore: Int = 0
     @AppStorage("lightItUpHighScore") private var lightItUpHighScore: Int = 0
     @AppStorage("playerAvatar") private var playerAvatar: String = "person.crop.circle.fill"
+    @AppStorage("playerProfileImageData") private var profileImageData: Data = Data()
     
     @Binding var path: NavigationPath
     @State private var showProfile = false
@@ -48,12 +49,30 @@ struct HomeTab: View {
 
                         // MARK: Hero
                         VStack(alignment: .center, spacing: 6) {
-                            Text("Gamify")
-                                .font(.system(size: 48, weight: .black, design: .rounded))
-                                .foregroundStyle(
-                                    LinearGradient(colors: [.white, .white.opacity(0.6)], startPoint: .topLeading, endPoint: .bottomTrailing)
-                                )
-                                .shadow(color: .purple.opacity(0.4), radius: 20)
+                            ZStack {
+                                Text("Gamify")
+                                    .font(.system(size: 42, weight: .black, design: .rounded))
+                                    .foregroundStyle(
+                                        LinearGradient(colors: [.white, .white.opacity(0.6)], startPoint: .topLeading, endPoint: .bottomTrailing)
+                                    )
+                                    .shadow(color: .purple.opacity(0.4), radius: 20)
+
+                                HStack {
+                                    Spacer()
+
+                                    Button {
+                                        showProfile = true
+                                    } label: {
+                                        ProfileAvatarImage(
+                                            imageData: profileImageData,
+                                            systemName: playerAvatar,
+                                            size: 48
+                                        )
+                                    }
+                                    .accessibilityLabel("Open profile")
+                                }
+                            }
+                            .frame(maxWidth: .infinity)
 
                             Text("Elevate your focus.\nChallenge your reflexes.")
                                 .font(.title3.weight(.medium))
@@ -107,26 +126,6 @@ struct HomeTab: View {
                     .padding(.horizontal, 20)
                     .padding(.top, 20)
                     .padding(.bottom, 32)
-                }
-                
-                // Profile Button Overlay
-                VStack {
-                    HStack {
-                        Spacer()
-                        Button {
-                            showProfile = true
-                        } label: {
-                            Image(systemName: playerAvatar)
-                                .font(.system(size: 24))
-                                .foregroundStyle(.white)
-                                .padding(12)
-                                .background(.black.opacity(0.4), in: Circle())
-                                .overlay(Circle().stroke(.white.opacity(0.2), lineWidth: 1))
-                        }
-                        .padding(.top, 16)
-                        .padding(.trailing, 20)
-                    }
-                    Spacer()
                 }
             }
             .toolbar(.hidden, for: .navigationBar)

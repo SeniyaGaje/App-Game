@@ -16,15 +16,25 @@ final class QuizRushService {
     /// - Parameter amount: The number of questions to fetch. Defaults to 10.
     /// - Throws: NetworkError if URL is invalid, status code is not 200, decoding fails, or results are empty.
     /// - Returns: An array of `OpenTriviaQuestion`.
-    func fetchQuestions(amount: Int = 10) async throws -> [OpenTriviaQuestion] {
+    func fetchQuestions(amount: Int = 10, categoryId: Int? = nil, difficulty: String? = nil) async throws -> [OpenTriviaQuestion] {
         guard var components = URLComponents(string: "https://opentdb.com/api.php") else {
             throw NetworkError.badURL
         }
 
-        components.queryItems = [
+        var queryItems = [
             URLQueryItem(name: "amount", value: "\(amount)"),
             URLQueryItem(name: "type", value: "multiple")
         ]
+        
+        if let categoryId = categoryId, categoryId != 0 {
+            queryItems.append(URLQueryItem(name: "category", value: "\(categoryId)"))
+        }
+        
+        if let difficulty = difficulty, difficulty != "any" {
+            queryItems.append(URLQueryItem(name: "difficulty", value: difficulty))
+        }
+        
+        components.queryItems = queryItems
 
         guard let url = components.url else {
             throw NetworkError.badURL

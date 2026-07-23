@@ -1,9 +1,14 @@
 import SwiftUI
+import PhotosUI
+import UIKit
 
 struct ProfileView: View {
     @AppStorage("playerName") private var playerName: String = "Player 1"
     @AppStorage("playerJoinDate") private var joinDateRaw: Double = Date().timeIntervalSince1970
     @AppStorage("playerAvatar") private var playerAvatar: String = "person.crop.circle.fill"
+    @AppStorage("playerProfileImageData") private var profileImageData: Data = Data()
+
+    @State private var selectedPhoto: PhotosPickerItem?
     
     @Environment(\.dismiss) private var dismiss
     
@@ -33,33 +38,73 @@ struct ProfileView: View {
                     VStack(spacing: 30) {
                         
                         // Avatar Picker
-                        VStack {
-                            Image(systemName: playerAvatar)
-                                .font(.system(size: 80))
-                                .foregroundStyle(
-                                    LinearGradient(colors: [.purple, .cyan], startPoint: .topLeading, endPoint: .bottomTrailing)
-                                )
-                                .padding()
-                                .background(.black.opacity(0.3), in: Circle())
-                                .shadow(color: .purple.opacity(0.3), radius: 20)
+                        VStack(spacing: 12) {
+                            ProfileAvatarImage(
+                                imageData: profileImageData,
+                                systemName: playerAvatar,
+                                size: 112
+                            )
+
+                            HStack(spacing: 12) {
+                                PhotosPicker(selection: $selectedPhoto, matching: .images) {
+                                    Label(
+                                        profileImageData.isEmpty ? "Choose Photo" : "Change Photo",
+                                        systemImage: "photo.on.rectangle"
+                                    )
+                                    .font(.subheadline.weight(.semibold))
+                                    .foregroundStyle(.white)
+                                    .padding(.horizontal, 14)
+                                    .padding(.vertical, 9)
+                                    .background(.purple.opacity(0.55), in: Capsule())
+                                }
+
+                                if !profileImageData.isEmpty {
+                                    Button {
+                                        profileImageData = Data()
+                                        selectedPhoto = nil
+                                    } label: {
+                                        Label("Remove", systemImage: "trash")
+                                            .font(.subheadline.weight(.semibold))
+                                            .foregroundStyle(.red)
+                                            .padding(.horizontal, 14)
+                                            .padding(.vertical, 9)
+                                            .background(.white.opacity(0.07), in: Capsule())
+                                    }
+                                }
+                            }
                             
                             ScrollView(.horizontal, showsIndicators: false) {
                                 HStack(spacing: 16) {
                                     ForEach(avatars, id: \.self) { avatar in
                                         Button {
                                             playerAvatar = avatar
+                                            profileImageData = Data()
+                                            selectedPhoto = nil
                                         } label: {
                                             Image(systemName: avatar)
                                                 .font(.title)
-                                                .foregroundStyle(playerAvatar == avatar ? .white : .white.opacity(0.3))
+                                                .foregroundStyle(
+                                                    playerAvatar == avatar && profileImageData.isEmpty
+                                                        ? .white
+                                                        : .white.opacity(0.3)
+                                                )
                                                 .padding(12)
                                                 .background(
                                                     Circle()
-                                                        .fill(playerAvatar == avatar ? .purple.opacity(0.5) : .white.opacity(0.05))
+                                                        .fill(
+                                                            playerAvatar == avatar && profileImageData.isEmpty
+                                                                ? .purple.opacity(0.5)
+                                                                : .white.opacity(0.05)
+                                                        )
                                                 )
                                                 .overlay(
                                                     Circle()
-                                                        .stroke(playerAvatar == avatar ? .purple : .clear, lineWidth: 2)
+                                                        .stroke(
+                                                            playerAvatar == avatar && profileImageData.isEmpty
+                                                                ? .purple
+                                                                : .clear,
+                                                            lineWidth: 2
+                                                        )
                                                 )
                                         }
                                     }
@@ -69,63 +114,55 @@ struct ProfileView: View {
                             .padding(.top, 10)
                         }
                         
-                        // Name Input
-                        VStack(alignment: .leading, spacing: 8) {
-                            Text("PLAYER NAME")
-                                .font(.caption.bold())
-                                .foregroundStyle(.white.opacity(0.5))
-                                .padding(.leading, 8)
+                        // Name & Join Date
+                        VStack(spacing: 6) {
+                            HStack(alignment: .center, spacing: 8) {
+                                TextField("Enter your name", text: $playerName)
+                                    .font(.system(size: 32, weight: .heavy, design: .rounded))
+                                    .foregroundStyle(.white)
+                                    .multilineTextAlignment(.center)
+                                    .fixedSize()
+                                
+                                Image(systemName: "pencil")
+                                    .font(.title3)
+                                    .foregroundStyle(.white.opacity(0.4))
+                            }
                             
-                            TextField("Enter your name", text: $playerName)
-                                .font(.title3.weight(.medium))
-                                .foregroundStyle(.white)
-                                .padding()
-                                .background(.white.opacity(0.08), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
-                                .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).stroke(.white.opacity(0.1), lineWidth: 1))
+                            Text("Member since \(Date(timeIntervalSince1970: joinDateRaw).formatted(date: .abbreviated, time: .omitted))")
+                                .font(.subheadline.weight(.medium))
+                                .foregroundStyle(.white.opacity(0.5))
                         }
                         .padding(.horizontal)
                         
-                        // Stats Overview
-                        VStack(alignment: .leading, spacing: 8) {
-                            Text("PLAYER STATS")
-                                .font(.caption.bold())
-                                .foregroundStyle(.white.opacity(0.5))
-                                .padding(.leading, 8)
-                            
-                            VStack(spacing: 0) {
-                                StatRow(title: "Joined", value: Date(timeIntervalSince1970: joinDateRaw).formatted(date: .abbreviated, time: .omitted), icon: "calendar")
-                                Divider().background(.white.opacity(0.1)).padding(.leading, 40)
-                                
-                                // Calculate Favorite Game
-                                let favoriteGame: String = {
-                                    let sessions = StatsVM.shared.sessions
-                                    if sessions.isEmpty { return "None Yet" }
-                                    let counts = Dictionary(grouping: sessions, by: { $0.mode }).mapValues { $0.count }
-                                    let best = counts.max { $0.value < $1.value }
-                                    return best?.key.rawValue ?? "None Yet"
-                                }()
-                                
-                                StatRow(title: "Favorite Game", value: favoriteGame, icon: "heart.fill")
-                                Divider().background(.white.opacity(0.1)).padding(.leading, 40)
-                                
-                                // Calculate Player Rank based on games played
-                                let playerRank: String = {
-                                    let count = StatsVM.shared.sessions.count
-                                    switch count {
-                                    case 0..<5: return "Rookie"
-                                    case 5..<15: return "Challenger"
-                                    case 15..<30: return "Veteran"
-                                    case 30..<50: return "Master"
-                                    default: return "Legend"
-                                    }
-                                }()
-                                
-                                StatRow(title: "Player Rank", value: playerRank, icon: "trophy.fill")
+                        // Dynamic Stats Grid
+                        let sessions = StatsVM.shared.sessions
+                        let totalGames = sessions.count
+                        let bestScore = sessions.map(\.score).max() ?? 0
+                        
+                        let favoriteGame: String = {
+                            if sessions.isEmpty { return "None Yet" }
+                            let counts = Dictionary(grouping: sessions, by: { $0.mode }).mapValues { $0.count }
+                            let best = counts.max { $0.value < $1.value }
+                            return best?.key.rawValue ?? "None"
+                        }()
+                        
+                        let playerRank: String = {
+                            switch totalGames {
+                            case 0..<5: return "Rookie"
+                            case 5..<15: return "Challenger"
+                            case 15..<30: return "Veteran"
+                            case 30..<50: return "Master"
+                            default: return "Legend"
                             }
-                            .background(.white.opacity(0.05), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
-                            .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).stroke(.white.opacity(0.1), lineWidth: 1))
+                        }()
+                        
+                        LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 16) {
+                            ProfileStatCard(title: "Rank", value: playerRank, icon: "crown.fill", color: .yellow)
+                            ProfileStatCard(title: "Top Game", value: favoriteGame, icon: "flame.fill", color: .red)
+                            ProfileStatCard(title: "Games Played", value: "\(totalGames)", icon: "gamecontroller.fill", color: .green)
+                            ProfileStatCard(title: "Best Score", value: "\(bestScore)", icon: "star.fill", color: .orange)
                         }
-                        .padding(.horizontal)
+                        .padding(.horizontal, 20)
                         
                     }
                     .padding(.vertical, 30)
@@ -134,6 +171,15 @@ struct ProfileView: View {
             .navigationTitle("Profile")
             .navigationBarTitleDisplayMode(.inline)
             .preferredColorScheme(.dark)
+            .task(id: selectedPhoto) {
+                guard let selectedPhoto,
+                      let data = try? await selectedPhoto.loadTransferable(type: Data.self),
+                      let resizedData = resizedProfileImageData(from: data) else {
+                    return
+                }
+
+                profileImageData = resizedData
+            }
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
                     Button {
@@ -157,27 +203,64 @@ struct ProfileView: View {
             }
         }
     }
+
+    private func resizedProfileImageData(from data: Data) -> Data? {
+        guard let sourceImage = UIImage(data: data) else { return nil }
+
+        let maximumDimension: CGFloat = 600
+        let sourceSize = sourceImage.size
+        let scale = min(
+            1,
+            maximumDimension / max(sourceSize.width, sourceSize.height)
+        )
+        let targetSize = CGSize(
+            width: max(1, sourceSize.width * scale),
+            height: max(1, sourceSize.height * scale)
+        )
+        let renderer = UIGraphicsImageRenderer(size: targetSize)
+        let resizedImage = renderer.image { _ in
+            sourceImage.draw(in: CGRect(origin: .zero, size: targetSize))
+        }
+
+        return resizedImage.jpegData(compressionQuality: 0.78)
+    }
 }
 
-private struct StatRow: View {
+struct ProfileStatCard: View {
     let title: String
     let value: String
     let icon: String
+    let color: Color
     
     var body: some View {
-        HStack(spacing: 12) {
+        VStack(spacing: 12) {
             Image(systemName: icon)
-                .font(.title3)
-                .foregroundStyle(.purple.opacity(0.8))
-                .frame(width: 24)
-            Text(title)
-                .foregroundStyle(.white)
-            Spacer()
-            Text(value)
-                .font(.headline.weight(.medium))
-                .foregroundStyle(.white.opacity(0.7))
+                .font(.system(size: 26))
+                .foregroundStyle(color)
+                .padding(14)
+                .background(color.opacity(0.2))
+                .clipShape(Circle())
+            
+            VStack(spacing: 4) {
+                Text(value)
+                    .font(.title3.weight(.heavy))
+                    .foregroundStyle(.white)
+                    .minimumScaleFactor(0.6)
+                    .lineLimit(1)
+                Text(title)
+                    .font(.caption.weight(.bold))
+                    .foregroundStyle(.white.opacity(0.5))
+                    .textCase(.uppercase)
+            }
         }
-        .padding()
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 20)
+        .padding(.horizontal, 12)
+        .background(Color.white.opacity(0.05), in: RoundedRectangle(cornerRadius: 24, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: 24, style: .continuous)
+                .stroke(Color.white.opacity(0.1), lineWidth: 1)
+        )
     }
 }
 

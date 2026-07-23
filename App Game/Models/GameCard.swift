@@ -1,9 +1,5 @@
-//
-//  GameCard.swift
-//  App Game
-//
 //  Model for Light It Up mode.
-//
+
 
 import Foundation
 
